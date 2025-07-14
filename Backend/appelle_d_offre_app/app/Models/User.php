@@ -17,10 +17,16 @@ class User extends Authenticatable
      *
      * @var array<int, string>
      */
+
+     protected $primaryKey = 'idUser';
+
     protected $fillable = [
-        'name',
-        'email',
-        'password',
+    'nom',
+    'prenom',
+    'email',
+    'password',
+    'telephone',
+    'role',
     ];
 
     /**
@@ -41,4 +47,20 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+    public function soumissions()
+{
+    return $this->hasMany(Soumission::class, 'idUser');
+}
+
+public function appelsOffres()
+{
+    return $this->hasMany(appelle_offres::class, 'idUser');
+}
+public function domaines()
+{
+    return $this->belongsToMany(Domaine::class, 'domaine_user', 'idUser', 'idDomaine');
+}
+
+
 }
