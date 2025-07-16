@@ -2,11 +2,11 @@
   <div class="container-fluid">
     <div
       class="mt-4 page-header min-height-300 border-radius-xl"
-      :style="{
-        backgroundImage:
-          'url(' + require('@/assets/img/curved-images/curved14.jpg') + ')',
-        backgroundPositionY: '50%',
-      }"
+:style="{
+  backgroundImage: `url(${curved14})`,
+  backgroundPositionY: '50%',
+}"
+
     >
       <span class="mask bg-gradient-success opacity-6"></span>
     </div>

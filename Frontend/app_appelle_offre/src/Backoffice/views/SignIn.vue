@@ -71,12 +71,10 @@
               >
                 <div
                   class="bg-cover oblique-image position-absolute fixed-top ms-auto h-100 z-index-0 ms-n6"
-                  :style="{
-                    backgroundImage:
-                      'url(' +
-                      require('@/assets/img/curved-images/curved9.jpg') +
-                      ')',
-                  }"
+                 :style="{
+  backgroundImage: `url(${bgImage})`
+}"
+
                 ></div>
               </div>
             </div>

@@ -8,10 +8,11 @@
   </div>
   <div
     class="mx-3 mt-3 border-radius-xl position-relative"
-    :style="{
-      backgroundImage: 'url(' + require('@/assets/img/vr-bg.jpg') + ')',
-      backgroundSize: 'cover',
-    }"
+   :style="{
+  backgroundImage: `url(${vrBg})`,
+  backgroundSize: 'cover',
+}"
+
   >
     <sidenav
       :custom_class="mcolor"
@@ -144,7 +145,7 @@
 </template>
 
 <script>
-//import Sidenav from "@/Backoffice/examples/Sidenav";
+
 import AppFooter from "@/Backoffice/examples/Footer.vue";
 import Navbar from "@/Backoffice/examples/Navbars/Navbar.vue";
 import CalendarCard from "./components/CalendarCard.vue";
@@ -158,6 +159,7 @@ import image1 from "@/Backoffice/assets/img/team-1.jpg";
 import image2 from "@/Backoffice/assets/img/team-2.jpg";
 import image3 from "@/Backoffice/assets/img/team-3.jpg";
 import image4 from "@/Backoffice/assets/img/team-4.jpg";
+import vrBg from "@/Backoffice/assets/img/vr-bg.jpg";
 
 const body = document.getElementsByTagName("body")[0];
 

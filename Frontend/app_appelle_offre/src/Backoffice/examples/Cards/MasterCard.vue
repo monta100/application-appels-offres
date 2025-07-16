@@ -2,10 +2,10 @@
   <div class="card bg-transparent shadow-xl">
     <div
       class="overflow-hidden position-relative border-radius-xl"
-      :style="{
-        backgroundImage:
-          'url(' + require('@/assets/img/curved-images/curved14.jpg') + ')',
-      }"
+    :style="{
+  backgroundImage: `url(${img})`,
+}"
+
     >
       <span class="mask" :class="`bg-gradient-${card.background}`"></span>
       <div class="card-body position-relative z-index-1 p-3">

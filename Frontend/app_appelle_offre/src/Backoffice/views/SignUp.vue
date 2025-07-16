@@ -2,10 +2,12 @@
   <navbar btn-background="bg-gradient-primary" />
   <div
     class="pt-5 m-3 page-header align-items-start min-vh-50 pb-11 border-radius-lg"
-    :style="{
-      backgroundImage:
-        'url(' + require('@/assets/img/curved-images/curved6.jpg') + ')',
-    }"
+:style="{
+  backgroundImage: `url(${curved6})`
+}"
+
+
+    
   >
     <span class="mask bg-gradient-dark opacity-6"></span>
     <div class="container">
