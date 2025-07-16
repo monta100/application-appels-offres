@@ -137,63 +137,52 @@
               </p>
             </div>
           </div>
+          <!-- la carte de Register -->
           <div class="card-body">
-            <form role="form">
-              <div class="mb-3">
-                <soft-input
-                  id="name"
-                  type="text"
-                  placeholder="Name"
-                  aria-label="Name"
-                />
-              </div>
-              <div class="mb-3">
-                <soft-input
-                  id="email"
-                  type="email"
-                  placeholder="Email"
-                  aria-label="Email"
-                />
-              </div>
-              <div class="mb-3">
-                <soft-input
-                  id="password"
-                  type="password"
-                  placeholder="Password"
-                  aria-label="Password"
-                />
-              </div>
-              <soft-checkbox
-                id="flexCheckDefault"
-                name="flexCheckDefault"
-                class="font-weight-light"
-                checked
-              >
-                I agree the
-                <a href="javascript:;" class="text-dark font-weight-bolder"
-                  >Terms and Conditions</a
-                >
-              </soft-checkbox>
+     <form @submit.prevent="register">
+  <div class="mb-3">
+  <input v-model="form.nom" type="text" placeholder="Nom" class="form-control" />
+</div>
 
-              <div class="text-center">
-                <soft-button
-                  color="dark"
-                  full-width
-                  variant="gradient"
-                  class="my-4 mb-2"
-                  >Sign up</soft-button
-                >
-              </div>
-              <p class="text-sm mt-3 mb-0">
-                Already have an account?
-                <router-link
-                  :to="{ name: 'Sign In' }"
-                  class="text-dark font-weight-bolder"
-                >
-                  Sign in
-                </router-link>
-              </p>
-            </form>
+<div class="mb-3">
+  <input v-model="form.prenom" type="text" placeholder="Prénom" class="form-control" />
+</div>
+
+<div class="mb-3">
+  <input v-model="form.email" type="email" placeholder="Email" class="form-control" />
+</div>
+
+<div class="mb-3">
+  <input v-model="form.telephone" type="text" placeholder="Téléphone" class="form-control" />
+</div>
+
+<div class="mb-3">
+  <input v-model="form.password" type="password" placeholder="Mot de passe" class="form-control" />
+</div>
+
+<div class="mb-3">
+  <input v-model="form.password_confirmation" type="password" placeholder="Confirmer le mot de passe" class="form-control" />
+</div>
+
+<div class="mb-3">
+  <select v-model="form.role" class="form-control">
+    <option disabled value="">Sélectionnez un rôle</option>
+    <option value="admin">Admin</option>
+    <option value="representant">Représentant</option>
+    <option value="participant">Participant</option>
+  </select>
+</div>
+
+
+  <soft-checkbox v-model="form.terms">
+    J’accepte les <a href="#">conditions d'utilisation</a>
+  </soft-checkbox>
+
+  <div class="text-center">
+    <soft-button type="submit" color="dark" full-width variant="gradient">Sign up</soft-button>
+  </div>
+</form>
+
           </div>
         </div>
       </div>
@@ -203,13 +192,14 @@
 </template>
 
 <script>
-import Navbar from "../examples/Navbars/Navbar.vue";
+import Navbar from "../examples/PageLayout/Navbar.vue";
 import AppFooter from "@/Backoffice/examples/PageLayout/Footer.vue";
 import SoftInput from "@/Backoffice/components/SoftInput.vue";
 import SoftCheckbox from "@/Backoffice/components/SoftCheckbox.vue";
 import SoftButton from "@/Backoffice/components/SoftButton.vue";
-
+import api from "@/Http/api"
 import { mapMutations } from "vuex";
+import curved6 from "@/Backoffice/assets/img/curved-images/curved6.jpg";
 
 export default {
   name: "SignupBasic",
@@ -219,6 +209,7 @@ export default {
     SoftInput,
     SoftCheckbox,
     SoftButton,
+    
   },
   created() {
     this.toggleEveryDisplay();
@@ -230,6 +221,43 @@ export default {
   },
   methods: {
     ...mapMutations(["toggleEveryDisplay", "toggleHideConfig"]),
+   async register() {
+  try {
+    console.log("Contenu du formulaire :", this.form); // 🔍 Ajout ici
+
+    const response = await api.post("/register", this.form);
+
+    alert("Inscription réussie !");
+    this.$router.push({ name: "Dashboard" });
+
+  } catch (error) {
+    if (error.response && error.response.status === 422) {
+      console.error("Erreurs de validation :", error.response.data.errors);
+      alert(JSON.stringify(error.response.data.errors));
+    } else {
+      console.error("Erreur serveur :", error);
+    }
+  }
+}
+
+
   },
+
+data() {
+  return {
+    form: {
+      nom: '',
+      prenom: '',
+      email: '',
+      telephone: '',
+      password: '',
+      password_confirmation: '',
+      role: '',
+    },
+  };
+}
+
 };
+
+
 </script>

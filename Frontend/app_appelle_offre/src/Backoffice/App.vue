@@ -31,10 +31,10 @@
 </template>
 <script>
 import Configurator from "@/Backoffice/examples/Configurator.vue";
-import Navbar from "@/Backoffice/examples/Navbars/Navbar.vue";
-import AppFooter from "@/Backoffice/examples/Footer.vue";
-import Sidenav from "@/Backoffice/examples/Sidenav/index.vue"; // attention ici aussi
+import Navbar from "./examples/PageLayout/Navbar.vue";
 
+import Sidenav from "@/Backoffice/examples/Sidenav/index.vue"; // attention ici aussi
+import AppFooter from "./examples/PageLayout/Footer.vue";
 import { mapMutations } from "vuex";
 export default {
   name: "App",

@@ -1,19 +1,22 @@
+// main.js (ou main.ts si tu utilises TypeScript)
+
 import { createApp } from "vue";
 
-// 🔄 Corriger le chemin vers App.vue (dans Backoffice)
-import App from "../Backoffice/App.vue"
+// 🔄 Composant racine
+import App from "../Backoffice/App.vue";
 
-// ✅ Importer le store et router de Backoffice
+// ✅ Store + Router
 import store from "../Backoffice/store/index.js";
 import router from "../Backoffice/router/index.js";
 
-// ✅ Importer les assets CSS du dashboard
+// ✅ Styles CSS nécessaires
 import "../Backoffice/assets/css/nucleo-icons.css";
 import "../Backoffice/assets/css/nucleo-svg.css";
 
-// ✅ Importer le plugin Soft UI Dashboard
+// ✅ Plugin UI
 import SoftUIDashboard from "../Backoffice/soft-ui-dashboard";
 
+// ⚙️ Créer instance Vue + plugins
 const appInstance = createApp(App);
 
 appInstance.use(store);
