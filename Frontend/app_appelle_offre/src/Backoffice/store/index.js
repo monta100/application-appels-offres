@@ -1,5 +1,6 @@
 import { createStore } from "vuex";
 import bootstrap from "bootstrap/dist/js/bootstrap.min.js";
+import auth from "../store/auth"
 
 export default createStore({
   state: {
@@ -68,4 +69,7 @@ export default createStore({
     },
   },
   getters: {},
+   modules: {
+    auth, // <--- ici on ajoute le module d'auth
+  },
 });

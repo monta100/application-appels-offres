@@ -15,7 +15,10 @@ import "../Backoffice/assets/css/nucleo-svg.css";
 
 // ✅ Plugin UI
 import SoftUIDashboard from "../Backoffice/soft-ui-dashboard";
+import 'bootstrap/dist/js/bootstrap.bundle.min.js'; // ⚠️ ce fichier est essentiel !
 
+
+import 'bootstrap/dist/css/bootstrap.min.css';
 // ⚙️ Créer instance Vue + plugins
 const appInstance = createApp(App);
 
