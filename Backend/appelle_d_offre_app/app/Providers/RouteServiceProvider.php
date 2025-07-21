@@ -7,6 +7,7 @@ use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvi
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Auth\Notifications\ResetPassword;
 
 class RouteServiceProvider extends ServiceProvider
 {
@@ -24,6 +25,16 @@ class RouteServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+
+
+// 👉 Ajout de l'URL personnalisée pour le reset password
+        ResetPassword::createUrlUsing(function ($user, string $token) {
+        return config('app.frontend_url') . '/backoffice.html#/reset-password?token=' . $token . '&email=' . urlencode($user->email);
+        });
+
+        // 👉 L'appel parent reste ici
+        parent::boot();
+
         $this->configureRateLimiting();
 
         $this->routes(function () {

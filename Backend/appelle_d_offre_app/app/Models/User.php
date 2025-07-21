@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use App\Notifications\CustomResetPassword;
 
 class User extends Authenticatable
 {
@@ -61,6 +62,7 @@ public function domaines()
 {
     return $this->belongsToMany(Domaine::class, 'domaine_user', 'idUser', 'idDomaine');
 }
+
 
 
 }

@@ -20,6 +20,12 @@
             <input class="form-check-input" type="checkbox" v-model="form.remember" id="rememberMe" />
             <label class="form-check-label" for="rememberMe">Remember me</label>
           </div>
+          <div class="mb-3 text-end">
+  <router-link :to="{ name: 'ForgotPassword' }" class="text-muted small text-decoration-none">
+    Forgot your password?
+  </router-link>
+</div>
+
 
           <button type="submit" class="btn btn-success w-100 rounded-pill">Sign in</button>
           <div class="mt-3 text-center">
