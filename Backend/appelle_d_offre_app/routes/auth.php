@@ -8,6 +8,7 @@ use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
 use App\Http\Controllers\Auth\ProfileController;
+use App\Http\Controllers\Auth\GoogleAuthController;
 
 Route::post('/register', [RegisteredUserController::class, 'store'])
                 ->middleware('guest')
@@ -39,3 +40,5 @@ Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
 
 
 Route::middleware('auth:sanctum')->put('/profil', [ProfileController::class, 'update']);
+Route::get('/auth/google', [GoogleAuthController::class, 'redirectToGoogle']);
+Route::get('/auth/google/callback', [GoogleAuthController::class, 'handleGoogleCallback']);

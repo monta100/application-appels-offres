@@ -22,6 +22,13 @@
           </div>
 
           <button type="submit" class="btn btn-success w-100 rounded-pill">Sign in</button>
+          <div class="mt-3 text-center">
+  <button @click="redirectToGoogle" class="btn btn-outline-dark rounded-pill d-flex align-items-center justify-content-center w-100">
+    <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google" style="width: 20px; margin-right: 8px" />
+    Sign in with Google
+  </button>
+</div>
+
         </form>
 
         <p class="mt-3 text-center text-muted">
@@ -56,13 +63,33 @@ export default {
         password: '',
         remember: false
       },
-    bgImage: loginBg // ✅ Ceci est la bonne affectation
+      bgImage: loginBg
     };
   },
   created() {
     this.toggleEveryDisplay();
     this.toggleHideConfig();
     body.classList.remove("bg-gray-100");
+
+    // 🔥 Si on revient de Google avec le token dans l'URL
+    const googleToken = this.$route.query.google_token;
+    if (googleToken) {
+      localStorage.setItem('token', googleToken);
+
+api.get('/user', {
+  headers: {
+    Authorization: `Bearer ${googleToken}`
+  }
+})
+.then(res => {
+  this.$store.commit('auth/setUser', res.data); // 🔁 remplace res.data.user par res.data
+  this.$router.push({ name: 'Dashboard' });
+})
+.catch(() => {
+  alert("Échec lors de la récupération du profil Google.");
+});
+
+    }
   },
   beforeUnmount() {
     this.toggleEveryDisplay();
@@ -71,6 +98,7 @@ export default {
   },
   methods: {
     ...mapMutations(["toggleEveryDisplay", "toggleHideConfig"]),
+    
     async login() {
       try {
         const response = await api.post('/login', {
@@ -91,10 +119,16 @@ export default {
           console.error(error);
         }
       }
+    },
+
+    redirectToGoogle() {
+      // 👇 Redirection vers ton backend Laravel qui gère l'auth Google
+      window.location.href = "http://localhost:8000/api/auth/google";
     }
   }
 };
 </script>
+
 
 <style scoped>
 body {
