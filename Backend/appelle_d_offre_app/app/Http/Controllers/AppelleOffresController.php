@@ -10,10 +10,12 @@ class AppelleOffresController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
-    {
-        //
-    }
+  public function index()
+{
+    $offres = appelle_offres::with(['user', 'domaine'])->latest()->get();
+    return response()->json($offres);
+}
+
 
     /**
      * Show the form for creating a new resource.
@@ -26,18 +28,40 @@ class AppelleOffresController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
-    {
-        //
+   public function store(Request $request)
+{
+    $validated = $request->validate([
+        'titre' => 'required|string|max:255',
+        'description' => 'required|string',
+        'budget' => 'required|numeric|min:0',
+        'date_limite' => 'required|date',
+        'statut' => 'nullable|string',
+        'date_publication' => 'nullable|date',
+        'idUser' => 'required|exists:users,id',
+        'idDomaine' => 'required|exists:domaines,id',
+        'fichier_joint' => 'nullable|file|mimes:pdf,docx,doc|max:2048'
+    ]);
+
+    // gérer le fichier s'il existe
+    if ($request->hasFile('fichier_joint')) {
+        $validated['fichier_joint'] = $request->file('fichier_joint')->store('fichiers_appels');
     }
+
+    $offre = appelle_offres::create($validated);
+
+    return response()->json($offre, 201);
+}
+
 
     /**
      * Display the specified resource.
      */
-    public function show(appelle_offres $appelle_offres)
-    {
-        //
-    }
+   public function show($id)
+{
+    $offre = appelle_offres::with(['user', 'domaine', 'soumissions'])->findOrFail($id);
+    return response()->json($offre);
+}
+
 
     /**
      * Show the form for editing the specified resource.
@@ -50,16 +74,41 @@ class AppelleOffresController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, appelle_offres $appelle_offres)
-    {
-        //
+   public function update(Request $request, $id)
+{
+    $offre = appelle_offres::findOrFail($id);
+
+    $validated = $request->validate([
+        'titre' => 'sometimes|required|string|max:255',
+        'description' => 'sometimes|required|string',
+        'budget' => 'sometimes|required|numeric|min:0',
+        'date_limite' => 'sometimes|required|date',
+        'statut' => 'nullable|string',
+        'date_publication' => 'nullable|date',
+        'idUser' => 'sometimes|required|exists:users,id',
+        'idDomaine' => 'sometimes|required|exists:domaines,id',
+        'fichier_joint' => 'nullable|file|mimes:pdf,docx,doc|max:2048'
+    ]);
+
+    if ($request->hasFile('fichier_joint')) {
+        $validated['fichier_joint'] = $request->file('fichier_joint')->store('fichiers_appels');
     }
+
+    $offre->update($validated);
+
+    return response()->json($offre);
+}
+
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(appelle_offres $appelle_offres)
-    {
-        //
-    }
+  public function destroy($id)
+{
+    $offre = appelle_offres::findOrFail($id);
+    $offre->delete();
+
+    return response()->json(['message' => 'Appel d’offre supprimé avec succès.']);
+}
+
 }

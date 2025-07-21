@@ -7,6 +7,8 @@ import SignUp from "../views/SignUp.vue";
 import SignIn from "../views/SignIn.vue";
 import ForgotPassword from "../views/ForgotPassword.vue";
 import ResetPassword from "../views/ResetPassword.vue";
+import user from "../views/Gestion_users/user.vue";
+import AppelsList from "../views/Gestion_appelle_offres/AppelsList.vue";
 const routes = [
   {
     path: "/",
@@ -48,6 +50,20 @@ const routes = [
     { path: '/forgot-password', name: 'ForgotPassword', component: ForgotPassword },
 
   { path: '/reset-password', name: 'ResetPassword', component: ResetPassword },
+
+   {
+    path: '/admin/users',
+    name: 'UsersList',
+    component: user,
+    //meta: { requiresAuth: true }, // protège par login si tu veux
+  },
+  {
+  path: '/admin/appels',
+  name: 'AppelsList',
+  component: AppelsList,
+  meta: { requiresAuth: true }
+}
+
 ];
 
 const router = createRouter({

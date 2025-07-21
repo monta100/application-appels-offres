@@ -1,4 +1,3 @@
-// Http/api.js
 import axios from "axios";
 
 const api = axios.create({
@@ -7,7 +6,16 @@ const api = axios.create({
     "Content-Type": "application/json",
     Accept: "application/json",
   },
-  withCredentials: true, // si tu utilises des cookies
+  withCredentials: false, // facultatif : à false si tu n'utilises pas les cookies
+});
+
+// ✅ Ajoute l’interceptor pour inclure automatiquement le token dans chaque requête
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem("token");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
 });
 
 export default api;

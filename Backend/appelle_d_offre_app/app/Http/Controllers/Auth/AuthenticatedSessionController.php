@@ -20,6 +20,9 @@ public function store(LoginRequest $request): JsonResponse
 
     /** @var \App\Models\User $user */
     $user = User::where('email', $request->email)->first();
+       if (!$user->is_active) {
+        return response()->json(['message' => 'Compte désactivé. Veuillez contacter l\'administrateur.'], 403);
+    }
 
     // Supprimer tous les tokens existants (facultatif)
     $user->tokens()->delete();

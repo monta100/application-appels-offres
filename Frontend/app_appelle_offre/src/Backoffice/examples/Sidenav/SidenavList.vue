@@ -10,7 +10,30 @@
             <shop />
           </template>
         </sidenav-collapse>
+
+
+
+
+
+        <li class="nav-item">
+        <sidenav-collapse navText="Users" :to="{ name: 'UsersList' }">
+          <template #icon>
+            <shop />
+          </template>
+        </sidenav-collapse>
       </li>
+
+       <li class="nav-item">
+        <sidenav-collapse navText="appells" :to="{ name: 'AppelsList' }">
+          <template #icon>
+            <shop />
+          </template>
+        </sidenav-collapse>
+      </li>
+
+      </li>
+
+      
 
       <li class="mt-3 nav-item">
         <h6
@@ -28,6 +51,8 @@
           </template>
         </sidenav-collapse>
       </li>
+
+
 
       <li class="nav-item">
         <sidenav-collapse navText="Sign In" :to="{ name: 'Sign In' }">

@@ -7,59 +7,65 @@ use Illuminate\Http\Request;
 
 class SoumissionController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        //
+        $soumissions = soumission::with(['user', 'appelOffre'])->latest()->get();
+        return response()->json($soumissions);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'prixPropose' => 'required|numeric|min:0',
+            'description' => 'required|string',
+            'temps_realisation' => 'required|string',
+            'score_ia' => 'nullable|numeric|min:0|max:100',
+            'fichier_joint' => 'nullable|file|mimes:pdf,docx,doc|max:2048',
+            'idUser' => 'required|exists:users,id',
+            'idAppel' => 'required|exists:appelle_offres,idAppel',
+        ]);
+
+        if ($request->hasFile('fichier_joint')) {
+            $validated['fichier_joint'] = $request->file('fichier_joint')->store('fichiers_soumissions');
+        }
+
+        $soumission = soumission::create($validated);
+        return response()->json($soumission, 201);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(soumission $soumission)
+    public function show($id)
     {
-        //
+        $soumission = soumission::with(['user', 'appelOffre', 'contrat'])->findOrFail($id);
+        return response()->json($soumission);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(soumission $soumission)
+    public function update(Request $request, $id)
     {
-        //
+        $soumission = soumission::findOrFail($id);
+
+        $validated = $request->validate([
+            'prixPropose' => 'sometimes|required|numeric|min:0',
+            'description' => 'sometimes|required|string',
+            'temps_realisation' => 'sometimes|required|string',
+            'score_ia' => 'nullable|numeric|min:0|max:100',
+            'fichier_joint' => 'nullable|file|mimes:pdf,docx,doc|max:2048',
+            'idUser' => 'sometimes|required|exists:users,id',
+            'idAppel' => 'sometimes|required|exists:appelle_offres,idAppel',
+        ]);
+
+        if ($request->hasFile('fichier_joint')) {
+            $validated['fichier_joint'] = $request->file('fichier_joint')->store('fichiers_soumissions');
+        }
+
+        $soumission->update($validated);
+        return response()->json($soumission);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, soumission $soumission)
+    public function destroy($id)
     {
-        //
-    }
+        $soumission = soumission::findOrFail($id);
+        $soumission->delete();
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(soumission $soumission)
-    {
-        //
+        return response()->json(['message' => 'Soumission supprimée avec succès.']);
     }
 }

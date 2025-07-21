@@ -7,59 +7,57 @@ use Illuminate\Http\Request;
 
 class ContratController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        //
+        $contrats = contrat::with('soumission')->latest()->get();
+        return response()->json($contrats);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'fichierpdf' => 'nullable|file|mimes:pdf|max:2048',
+            'date_creation' => 'nullable|date',
+            'idSoumission' => 'required|exists:soumissions,idSoumission',
+        ]);
+
+        if ($request->hasFile('fichierpdf')) {
+            $validated['fichierpdf'] = $request->file('fichierpdf')->store('contrats');
+        }
+
+        $contrat = contrat::create($validated);
+        return response()->json($contrat, 201);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(contrat $contrat)
+    public function show($id)
     {
-        //
+        $contrat = contrat::with('soumission')->findOrFail($id);
+        return response()->json($contrat);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(contrat $contrat)
+    public function update(Request $request, $id)
     {
-        //
+        $contrat = contrat::findOrFail($id);
+
+        $validated = $request->validate([
+            'fichierpdf' => 'nullable|file|mimes:pdf|max:2048',
+            'date_creation' => 'nullable|date',
+            'idSoumission' => 'sometimes|required|exists:soumissions,idSoumission',
+        ]);
+
+        if ($request->hasFile('fichierpdf')) {
+            $validated['fichierpdf'] = $request->file('fichierpdf')->store('contrats');
+        }
+
+        $contrat->update($validated);
+        return response()->json($contrat);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, contrat $contrat)
+    public function destroy($id)
     {
-        //
-    }
+        $contrat = contrat::findOrFail($id);
+        $contrat->delete();
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(contrat $contrat)
-    {
-        //
+        return response()->json(['message' => 'Contrat supprimé avec succès.']);
     }
 }

@@ -1,14 +1,19 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\ContratController;
+use App\Http\Controllers\DomainesController;
+use App\Http\Controllers\Auth\UserController;
+use App\Http\Controllers\SoumissionController;
+use App\Http\Controllers\Auth\ProfileController;
+use App\Http\Controllers\AppelleOffresController;
+use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
-use App\Http\Controllers\Auth\ProfileController;
-use App\Http\Controllers\Auth\GoogleAuthController;
 
 Route::post('/register', [RegisteredUserController::class, 'store'])
                 ->middleware('guest')
@@ -42,3 +47,20 @@ Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
 Route::middleware('auth:sanctum')->put('/profil', [ProfileController::class, 'update']);
 Route::get('/auth/google', [GoogleAuthController::class, 'redirectToGoogle']);
 Route::get('/auth/google/callback', [GoogleAuthController::class, 'handleGoogleCallback']);
+
+
+Route::middleware('auth:sanctum')->group(function () {
+Route::apiResource('appels', AppelleOffresController::class);});
+Route::middleware('auth:sanctum')->group(function () {
+    Route::apiResource('soumissions', SoumissionController::class);
+});
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::apiResource('contrats', ContratController::class);
+});
+
+Route::middleware('auth:sanctum')->get('/domaines', [DomainesController::class, 'index']);
+
+
+Route::middleware('auth:sanctum')->get('/users', [UserController::class, 'index']);
+Route::middleware('auth:sanctum')->patch('/users/{user}/toggle-active', [UserController::class, 'toggleActive']);

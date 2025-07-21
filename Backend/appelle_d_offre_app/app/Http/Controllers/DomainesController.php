@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\domaines;
+use App\Models\Domaine;
 use Illuminate\Http\Request;
 
 class DomainesController extends Controller
@@ -10,10 +10,11 @@ class DomainesController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
-    {
-        //
-    }
+ public function index()
+{
+    $domaines = Domaine::all();
+    return response()->json($domaines);
+}
 
     /**
      * Show the form for creating a new resource.
@@ -34,7 +35,7 @@ class DomainesController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(domaines $domaines)
+    public function show(Domaine $domaines)
     {
         //
     }
@@ -42,7 +43,7 @@ class DomainesController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(domaines $domaines)
+    public function edit(Domaine $domaines)
     {
         //
     }
@@ -50,7 +51,7 @@ class DomainesController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, domaines $domaines)
+    public function update(Request $request, Domaine $domaines)
     {
         //
     }
@@ -58,7 +59,7 @@ class DomainesController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(domaines $domaines)
+    public function destroy(Domaine $domaines)
     {
         //
     }
