@@ -85,6 +85,38 @@ const feedImages = Array.from({ length: 8 }, (_, i) =>
 
 
 
+import { onMounted } from 'vue'
+
+onMounted(() => {
+  // Vérifie que jQuery est bien chargé
+  if (typeof window.$ === 'function') {
+    // Relance OwlCarousel
+    $('.employee-slider').owlCarousel({
+      loop: true,
+      margin: 20,
+      autoplay: true,
+      autoplayTimeout: 2000,
+      autoplayHoverPause: true,
+      nav: false,
+      dots: true,
+      responsiveClass: true,
+      responsive: {
+        0: { items: 1 },
+        576: { items: 1 },
+        768: { items: 1 },
+        992: { items: 2 }
+      }
+    })
+
+    // Active Nice Select si besoin
+    $('select').niceSelect()
+
+    // Active WOW.js
+    new WOW().init()
+  } else {
+    console.warn('jQuery non chargé. Les effets du template ne seront pas appliqués.')
+  }
+})
 
 </script>
 

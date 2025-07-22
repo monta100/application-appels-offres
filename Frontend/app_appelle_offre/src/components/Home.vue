@@ -1,31 +1,32 @@
 <template>
   <div>
     <Navbar />
+    <HeroBanner />
+    <StatsSection />
+    <DomainSection />
+    <JoinNowSection />
 
-    <section class="hero-section">
-      <div class="container text-center py-5">
-        <h1 class="display-4 fw-bold text-uppercase mb-4">
-          Bienvenue dans l'application d'appel d'offre
-        </h1>
-        <p class="lead">
-          Consultez, postulez ou gérez vos appels d'offres en toute simplicité !
-        </p>
-        <router-link to="/register" class="btn btn-warning mt-3">Créer un compte</router-link>
-      </div>
-    </section>
 
     <Footer />
   </div>
 </template>
 
-<script setup>
+<script>
 import Navbar from '@/components/Navbar.vue'
+import HeroBanner from '@/components/HeroBanner.vue'
 import Footer from '@/components/Footer.vue'
-</script>
+import StatsSection from './StatsSection.vue'
+import DomainSection from '@/components/DomainSection.vue'
+import JoinNowSection from './JoinNowSection.vue'
+export default {
+  components: {
+    Navbar,
+    HeroBanner,
+    Footer,
+    StatsSection,
+    DomainSection,
+    JoinNowSection
 
-<style scoped>
-.hero-section {
-  background-color: #f8f9fa;
-  padding: 80px 0;
+  }
 }
-</style>
+</script>
