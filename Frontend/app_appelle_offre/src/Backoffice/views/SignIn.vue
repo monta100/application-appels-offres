@@ -2,7 +2,8 @@
   <div class="container-fluid min-vh-100 d-flex align-items-center justify-content-center bg-light">
     <div class="row shadow-lg rounded-4 overflow-hidden" style="max-width: 960px; width: 100%;">
       <div class="col-md-6 bg-white p-5">
-        <h3 class="text-success fw-bold mb-2">Welcome back</h3>
+<h3 class="text-orange fw-bold mb-2">Welcome back</h3>
+        
         <p class="text-muted mb-4">Please enter your email and password to sign in</p>
 
         <form @submit.prevent="login">
@@ -22,13 +23,13 @@
           </div>
 
           <div class="mb-3 text-end">
-  <router-link :to="{ name: 'ForgotPassword' }" class="text-muted small text-decoration-none">
+  <router-link :to="{ name: 'ForgotPassword' }"class="text-orange fw-bold mb-2">>
     Forgot your password?
   </router-link>
 </div>
 
 
-          <button type="submit" class="btn btn-success w-100 rounded-pill">Sign in</button>
+<button type="submit" class="btn btn-orange w-100 rounded-pill">Sign in</button>
          <div
   v-if="errorMessage"
   class="alert-custom d-flex align-items-center justify-content-center gap-2"
@@ -50,7 +51,7 @@
 
         <p class="mt-3 text-center text-muted">
           Don't have an account?
-          <router-link :to="{ name: 'Sign Up' }" class="text-success fw-bold">Sign up</router-link>
+<router-link :to="{ name: 'Sign Up' }" class="text-warning fw-bold">Sign up</router-link>
         </p>
       </div>
 
@@ -129,7 +130,7 @@ api.get('/user', {
     localStorage.setItem('token', response.data.access_token);
     this.$store.commit('auth/setUser', response.data.user);
 
-    this.$router.push({ name: "Dashboard" });
+    window.location.href = '/appelles'; // fallback
   } catch (error) {
     if (error.response?.status === 403) {
       this.errorMessage = "Votre compte est désactivé. Veuillez contacter le service d'administration.";
@@ -167,6 +168,11 @@ api.get('/user', {
 body {
   font-family: 'Poppins', sans-serif;
 }
+.text-orange {
+  color: #ff6a00; /* Orange vif */
+  transition: color 0.3s ease;
+}
+
 
 .alert-custom {
   background: linear-gradient(135deg, #ff4e50, #f00000);
@@ -184,5 +190,20 @@ body {
 .alert-custom i {
   font-size: 1.2rem;
 }
+
+
+.btn-orange {
+  background: linear-gradient(to right, #ff6a00, #ff8c00);
+  color: white;
+  font-weight: 600;
+  border: none;
+  padding: 10px 0;
+  transition: background 0.3s ease;
+}
+
+.btn-orange:hover {
+  background: linear-gradient(to right, #e55d00, #e67e00);
+}
+
 
 </style>

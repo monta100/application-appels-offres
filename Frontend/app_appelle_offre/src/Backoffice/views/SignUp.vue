@@ -81,6 +81,7 @@
 
 <script>
 import { mapMutations } from 'vuex';
+import axios from 'axios';
 
 export default {
   name: "SignUpAnimated",
@@ -120,14 +121,23 @@ export default {
     nextStep() {
       this.step = 2;
     },
-    submitForm() {
-      if (!this.form.terms) {
-        alert("Veuillez accepter les conditions.");
-        return;
-      }
+   submitForm() {
+  if (!this.form.terms) {
+    alert("Veuillez accepter les conditions.");
+    return;
+  }
+
+  axios.post('http://localhost:8000/api/register', this.form)
+    .then(response => {
       alert("Inscription réussie !");
       this.$router.push({ name: "Dashboard" });
-    }
+    })
+    .catch(error => {
+      console.error(error);
+      alert("Erreur lors de l'inscription.");
+    });
+}
+
   }
 };
 </script>

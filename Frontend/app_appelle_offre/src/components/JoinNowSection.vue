@@ -17,7 +17,7 @@
         Inscrivez-vous pour accéder aux appels d'offres et collaborer avec des
         entreprises fiables.
       </p>
-      <router-link to="/sign-up" class="cta-button">S'inscrire</router-link>
+<button @click="goToSignUp" class="cta-button">S'inscrire</button>
       <p class="testimonial">
         Déjà plus de <strong>300 prestataires</strong> nous ont fait confiance.
       </p>
@@ -90,3 +90,12 @@
   opacity: 0.9;
 }
 </style>
+<script setup>
+
+const goToSignUp = () => {
+    window.location.assign('/backoffice.html#/sign-up');
+
+};
+
+
+</script>

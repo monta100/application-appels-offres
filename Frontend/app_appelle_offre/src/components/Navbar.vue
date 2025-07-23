@@ -40,10 +40,38 @@
                   <li><router-link to="/elements">Elements</router-link></li>
                 </ul>
               </li>
-              <li class="menu-btn">
-                <router-link class="login" to="/login">LOG IN</router-link>
+
+              <!-- Auth buttons -->
+              <li class="menu-btn" v-if="!user">
+                <router-link @click="goToSignin" class="login" to="/login">LOG IN</router-link>
                 <router-link class="template-btn" to="/register">SIGN UP</router-link>
               </li>
+
+              <!-- User connected dropdown -->
+         <li class="nav-item dropdown" v-else>
+  <button
+    class="btn btn-sm dropdown-toggle"
+    type="button"
+    data-bs-toggle="dropdown"
+    aria-expanded="false"
+    style="background-color: #ff6b00; color: white; font-weight: 500; border-radius: 10px; padding: 6px 12px;"
+  >
+    <i class="fa fa-user me-1"></i> {{ user.prenom }} {{ user.nom }}
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end mt-2 shadow-sm animate__animated animate__fadeIn">
+    <li>
+      <router-link class="dropdown-item" to="/profile">
+        <i class="fa fa-id-card me-2"></i> Profil
+      </router-link>
+    </li>
+    <li>
+      <button class="dropdown-item text-danger" @click="logout">
+        <i class="fa fa-sign-out-alt me-2"></i> Se déconnecter
+      </button>
+    </li>
+  </ul>
+</li>
+
             </ul>
           </div>
         </div>
@@ -53,12 +81,28 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
+import { onMounted, computed } from 'vue'
+import { useStore } from 'vuex'
+import { useRouter } from 'vue-router'
+
+const store = useStore()
+const router = useRouter()
+
+const user = computed(() => store.state.auth.user)
+
+const goToSignin = () => {
+  window.location.assign('/backoffice.html#/sign-in')
+}
+
+const logout = () => {
+  store.dispatch('auth/logout')
+  localStorage.removeItem('token')
+    window.location.href = '/sign-in'; // fallback
+}
 
 onMounted(() => {
-  // Vérifie que jQuery est bien chargé
+  // jQuery stuff (si nécessaire)
   if (typeof window.$ === 'function') {
-    // Re-activation des composants JS
     $('.employee-slider').owlCarousel({
       loop: true,
       margin: 20,
@@ -74,11 +118,10 @@ onMounted(() => {
         992: { items: 2 }
       }
     })
-
     $('select').niceSelect()
     new WOW().init()
   } else {
-    console.warn('jQuery non chargé. Les animations ne fonctionneront pas.')
+    console.warn('jQuery non chargé.')
   }
 })
 </script>

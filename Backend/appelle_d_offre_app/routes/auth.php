@@ -51,6 +51,8 @@ Route::get('/auth/google/callback', [GoogleAuthController::class, 'handleGoogleC
 
 Route::middleware('auth:sanctum')->group(function () {
 Route::apiResource('appels', AppelleOffresController::class);});
+Route::middleware('auth:sanctum')->get('/appelle_offres/user', [AppelleOffresController::class, 'userAppels']);
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('soumissions', SoumissionController::class);
 });

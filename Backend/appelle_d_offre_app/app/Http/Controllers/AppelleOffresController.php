@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\appelle_offres;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class AppelleOffresController extends Controller
 {
@@ -110,5 +111,14 @@ class AppelleOffresController extends Controller
 
     return response()->json(['message' => 'Appel d’offre supprimé avec succès.']);
 }
+
+
+public function userAppels()
+{
+    return appelle_offres::with('domaine')
+        ->where('idUser', auth()->id())
+        ->get();
+}
+
 
 }
