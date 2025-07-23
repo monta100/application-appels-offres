@@ -3,9 +3,6 @@
 
 
 
-
-
-
   <div v-if="loading" class="text-center py-5">
     <div class="spinner-border text-warning" role="status"></div>
   </div>
@@ -41,6 +38,8 @@
         Prochaine date limite : <strong>{{ nextDeadline }}</strong>
       </div>
     </div>
+
+        <AddOffre />
 
     <!-- Tableau -->
     <div class="table-responsive">
@@ -94,7 +93,7 @@ import { useRouter } from 'vue-router';
 import api from '@/Http/api';
 import Navbar from '@/components/Navbar.vue';
 import Footer from '@/components/Footer.vue';
-
+import AddOffre from './AddOffre.vue';
 const store = useStore();
 const router = useRouter();
 const appelsOffres = ref([]);

@@ -15,7 +15,8 @@ class appelle_offres extends Model
         'titre',
         'description',
         'budget',
-        'date_limite',
+        'date_debut',
+        'date_fin',
         'fichier_joint',
         'statut',
         'date_publication',
@@ -27,8 +28,11 @@ class appelle_offres extends Model
 
 
 
+
+
        protected $casts = [
-        'date_limite' => 'date',
+        'date_debut' => 'date',
+       'date_fin' => 'date',
         'date_publication' => 'datetime',
     ];
 

@@ -29,28 +29,30 @@ class AppelleOffresController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-   public function store(Request $request)
+  public function store(Request $request)
 {
     $validated = $request->validate([
         'titre' => 'required|string|max:255',
         'description' => 'required|string',
         'budget' => 'required|numeric|min:0',
-        'date_limite' => 'required|date',
+         'date_debut' => 'required|date',           // ✅ Ajouté
+    'date_fin' => 'required|date|after_or_equal:date_debut', // ✅ Ajouté avec validation logique
         'statut' => 'nullable|string',
         'date_publication' => 'nullable|date',
-        'idUser' => 'required|exists:users,id',
-        'idDomaine' => 'required|exists:domaines,id',
+        'idDomaine' => 'required|exists:domaines,idDomaine',
         'fichier_joint' => 'nullable|file|mimes:pdf,docx,doc|max:2048'
     ]);
 
-    // gérer le fichier s'il existe
+            
+
     if ($request->hasFile('fichier_joint')) {
         $validated['fichier_joint'] = $request->file('fichier_joint')->store('fichiers_appels');
     }
 
-    $offre = appelle_offres::create($validated);
+    $validated['idUser'] = auth()->id(); // On injecte le user connecté
+    appelle_offres::create($validated);
 
-    return response()->json($offre, 201);
+    return response()->json(['message' => 'Ajout réussi']);
 }
 
 
