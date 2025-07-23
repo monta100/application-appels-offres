@@ -1,8 +1,6 @@
 <template>
   <Navbar />
 
-
-
   <div v-if="loading" class="text-center py-5">
     <div class="spinner-border text-warning" role="status"></div>
   </div>
@@ -13,7 +11,7 @@
       <div class="d-flex align-items-center gap-3">
         <i class="fas fa-handshake fa-2x"></i>
         <div>
-<h2 class="fw-bold mb-1">Bonjour, {{ user?.prenom || '' }} {{ user?.nom || '' }} !</h2>
+          <h2 class="fw-bold mb-1">Bonjour, {{ user?.prenom || '' }} {{ user?.nom || '' }} !</h2>
           <p class="mb-0">Commencez à publier vos appels d'offres en toute simplicité.</p>
         </div>
       </div>
@@ -39,7 +37,7 @@
       </div>
     </div>
 
-        <AddOffre />
+    <AddOffre />
 
     <!-- Tableau -->
     <div class="table-responsive">
@@ -54,22 +52,108 @@
             <th>Domaine</th>
             <th>Création</th>
             <th>Statut</th>
+            <th>Actions</th>
+
           </tr>
+          
         </thead>
         <tbody>
           <tr v-for="(appel, index) in paginatedAppels" :key="appel.idAppelleOffre">
             <td>{{ (page - 1) * perPage + index + 1 }}</td>
-            <td class="fw-semibold">{{ appel.titre }}</td>
-            <td>{{ appel.description }}</td>
-            <td>{{ formatDate(appel.date_debut) }}</td>
-            <td>{{ formatDate(appel.date_fin) }}</td>
-            <td><span class="badge bg-info text-dark rounded-pill">{{ appel.domaine?.nom|| '—'  }}</span></td>
-            <td>{{ formatDate(appel.created_at) || '---' }}</td>
-            <td>
-              <span class="badge" :class="appel.statut === 'cloturé' ? 'bg-danger' : 'bg-success'">
-                {{ appel.statut.toUpperCase() }}
-              </span>
+
+            <td @dblclick="editingField = { id: appel.idAppelleOffre, field: 'titre' }">
+              <template v-if="editingField?.id === appel.idAppelleOffre && editingField?.field === 'titre'">
+                <input v-model="appel.titre" class="form-control form-control-sm" @blur="updateField(appel, 'titre')" @keyup.enter="updateField(appel, 'titre')" />
+              </template>
+              <template v-else>
+                <span class="editable">{{ appel.titre }}</span>
+              </template>
             </td>
+
+            <td @dblclick="editingField = { id: appel.idAppelleOffre, field: 'description' }">
+              <template v-if="editingField?.id === appel.idAppelleOffre && editingField?.field === 'description'">
+                <textarea v-model="appel.description" class="form-control form-control-sm" rows="2" @blur="updateField(appel, 'description')" @keyup.enter="updateField(appel, 'description')"></textarea>
+              </template>
+              <template v-else>
+                <span class="editable">{{ appel.description }}</span>
+              </template>
+            </td>
+
+            <td @dblclick="editingField = { id: appel.idAppelleOffre, field: 'date_debut' }">
+              <template v-if="editingField?.id === appel.idAppelleOffre && editingField?.field === 'date_debut'">
+                <input type="date" v-model="appel.date_debut" class="form-control form-control-sm" @blur="updateField(appel, 'date_debut')" @keyup.enter="updateField(appel, 'date_debut')" />
+              </template>
+              <template v-else>
+                <span class="editable">{{ formatDate(appel.date_debut) }}</span>
+              </template>
+            </td>
+
+            <td @dblclick="editingField = { id: appel.idAppelleOffre, field: 'date_fin' }">
+              <template v-if="editingField?.id === appel.idAppelleOffre && editingField?.field === 'date_fin'">
+                <input type="date" v-model="appel.date_fin" class="form-control form-control-sm" @blur="updateField(appel, 'date_fin')" @keyup.enter="updateField(appel, 'date_fin')" />
+              </template>
+              <template v-else>
+                <span class="editable">{{ formatDate(appel.date_fin) }}</span>
+              </template>
+            </td>
+<td @dblclick="editingField = { id: appel.idAppelleOffre, field: 'idDomaine' }">
+  <template v-if="editingField?.id === appel.idAppelleOffre && editingField?.field === 'idDomaine'">
+    <select
+      v-model="appel.idDomaine"
+      class="form-select form-select-sm"
+      @blur="updateField(appel, 'idDomaine')"
+      @change="updateField(appel, 'idDomaine')"
+    >
+      <option v-for="domaine in domaines" :key="domaine.idDomaine" :value="domaine.idDomaine">
+        {{ domaine.nom }}
+      </option>
+    </select>
+  </template>
+  <template v-else>
+    <span class="editable">{{ appel.domaine?.nom || '—' }}</span>
+  </template>
+</td>
+
+
+            <td>{{ formatDate(appel.created_at) || '---' }}</td>
+            <td @dblclick="editingField = { id: appel.idAppelleOffre, field: 'statut' }">
+  <template v-if="editingField?.id === appel.idAppelleOffre && editingField?.field === 'statut'">
+    <select
+      v-model="appel.statut"
+      class="form-select form-select-sm"
+      @blur="updateField(appel, 'statut')"
+      @change="updateField(appel, 'statut')"
+    >
+      <option value="publiée">Publiée</option>
+      <option value="cloturé">Clôturé</option>
+      <option value="cloturé">brouillon</option>
+
+    </select>
+  </template>
+  <template v-else>
+    <span class="badge" :class="appel.statut === 'cloturé' ? 'bg-danger' : 'bg-success'">
+      {{ appel.statut.toUpperCase() }}
+    </span>
+
+
+
+
+
+
+
+  </template>
+</td>
+
+    <td>
+  <button
+    class="btn btn-sm btn-outline-danger"
+    data-bs-toggle="modal"
+    :data-bs-target="'#confirmDeleteModal' + appel.idAppelleOffre"
+  >
+    <i class="fa fa-trash"></i>
+  </button>
+</td>
+
           </tr>
         </tbody>
       </table>
@@ -84,7 +168,49 @@
   </div>
 
   <Footer />
+
+
+
+
+
+
+
+
+
+
+<!-- Modals de confirmation de suppression -->
+<div v-for="appel in paginatedAppels" :key="'modal-' + appel.idAppelleOffre">
+  <div class="modal fade" :id="'confirmDeleteModal' + appel.idAppelleOffre" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header bg-danger text-white">
+          <h5 class="modal-title">Confirmer la suppression</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          Êtes-vous sûr de vouloir supprimer <strong>{{ appel.titre }}</strong> ?
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+          <button
+            type="button"
+            class="btn btn-danger"
+            @click="deleteAppel(appel.idAppel)"
+            data-bs-dismiss="modal"
+          >
+            Supprimer
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
 </template>
+
 
 <script setup>
 import { onMounted, ref, computed } from 'vue';
@@ -112,13 +238,23 @@ const paginatedAppels = computed(() => {
 const formatDate = (dateStr) => {
   return new Date(dateStr).toLocaleDateString('fr-FR');
 };
+const domaines = ref([]);
 
+const fetchDomaines = async () => {
+  try {
+    const response = await api.get('/domaines'); // ou ton endpoint réel
+    domaines.value = response.data;
+  } catch (error) {
+    console.error("Erreur lors du chargement des domaines :", error);
+  }
+};
 // KPI dynamiques
 const nbPublie = computed(() => appelsOffres.value.filter(o => o.statut === 'publié').length);
 const nbBrouillon = computed(() => appelsOffres.value.filter(o => o.statut !== 'publié').length);
 const nbTotal = computed(() => appelsOffres.value.length);
 const nbExpires = computed(() => appelsOffres.value.filter(o => new Date(o.date_fin) < new Date()).length);
 const nbRestants = computed(() => nbTotal.value - nbExpires.value);
+const editingField = ref({ id: null, field: null });
 
 // Prochaine date limite
 const nextDeadline = computed(() => {
@@ -169,8 +305,39 @@ onMounted(async () => {
     return;
   }
   await fetchAppelsOffres();
+   await  fetchDomaines();
+
   
 });
+const updateField = async (appel, field) => {
+  try {
+    console.log("Update:", {
+  [field]: appel[field]
+})
+    await api.put(`/appels/${appel.idAppel}`, {
+      [field]: appel[field]
+    });
+    editingField.value = null;
+  } catch (err) {
+    console.error(err);
+  }
+};
+const deleteAppel = async (id) => {
+  if (!id) {
+    console.error("❌ ID manquant pour suppression");
+    return;
+  }
+
+  try {
+    await api.delete(`/appels/${id}`);
+    appelsOffres.value = appelsOffres.value.filter(appel => appel.idAppel !== id);
+    console.log("✅ Appel supprimé :", id);
+  } catch (err) {
+    console.error("Erreur de suppression :", err);
+  }
+};
+
+
 </script>
 
 <style scoped>

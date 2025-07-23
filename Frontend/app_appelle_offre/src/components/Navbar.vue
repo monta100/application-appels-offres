@@ -21,8 +21,8 @@
           <div class="main-menu">
             <ul class="nav-menu">
               <li><router-link to="/" exact>HOME</router-link></li>
-              <li><router-link to="/about">ABOUT US</router-link></li>
-              <li><router-link to="/job-category">CATEGORY</router-link></li>
+              <li><router-link to="/about">appelle_offres</router-link></li>
+              <li><router-link to="/job-category">consulter Mes Soumission</router-link></li>
               <li>
                 <a href="#">BLOG</a>
                 <ul class="sub-menu">

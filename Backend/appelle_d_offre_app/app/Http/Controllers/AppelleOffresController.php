@@ -82,16 +82,15 @@ class AppelleOffresController extends Controller
     $offre = appelle_offres::findOrFail($id);
 
     $validated = $request->validate([
-        'titre' => 'sometimes|required|string|max:255',
-        'description' => 'sometimes|required|string',
-        'budget' => 'sometimes|required|numeric|min:0',
-        'date_limite' => 'sometimes|required|date',
+        'titre' => 'sometimes|string|max:255',
+        'description' => 'sometimes|string',
+        'budget' => 'sometimes|numeric|min:0',
+        'date_limite' => 'sometimes|date',
         'statut' => 'nullable|string',
-        'date_debut' => 'required|date',        
-         'date_fin' => 'required|date|after_or_equal:date_debut',
+        'date_debut' => 'date',        
+         'date_fin' => 'date|after_or_equal:date_debut',
         'date_publication' => 'nullable|date',
-        'idUser' => 'sometimes|required|exists:users,id',
-        'idDomaine' => 'sometimes|required|exists:domaines,id',
+        'idDomaine' => 'exists:domaines,idDomaine',
         'fichier_joint' => 'nullable|file|mimes:pdf,docx,doc|max:2048'
     ]);
 
