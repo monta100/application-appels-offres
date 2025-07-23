@@ -35,8 +35,8 @@ class AppelleOffresController extends Controller
         'titre' => 'required|string|max:255',
         'description' => 'required|string',
         'budget' => 'required|numeric|min:0',
-         'date_debut' => 'required|date',           // ✅ Ajouté
-    'date_fin' => 'required|date|after_or_equal:date_debut', // ✅ Ajouté avec validation logique
+         'date_debut' => 'required|date',        
+         'date_fin' => 'required|date|after_or_equal:date_debut',
         'statut' => 'nullable|string',
         'date_publication' => 'nullable|date',
         'idDomaine' => 'required|exists:domaines,idDomaine',
@@ -87,6 +87,8 @@ class AppelleOffresController extends Controller
         'budget' => 'sometimes|required|numeric|min:0',
         'date_limite' => 'sometimes|required|date',
         'statut' => 'nullable|string',
+        'date_debut' => 'required|date',        
+         'date_fin' => 'required|date|after_or_equal:date_debut',
         'date_publication' => 'nullable|date',
         'idUser' => 'sometimes|required|exists:users,id',
         'idDomaine' => 'sometimes|required|exists:domaines,id',

@@ -60,7 +60,7 @@
   </button>
   <ul class="dropdown-menu dropdown-menu-end mt-2 shadow-sm animate__animated animate__fadeIn">
     <li>
-      <router-link class="dropdown-item" to="/profile">
+      <router-link class="dropdown-item" to="/backoffice.html#/profile">
         <i class="fa fa-id-card me-2"></i> Profil
       </router-link>
     </li>
@@ -92,6 +92,9 @@ const user = computed(() => store.state.auth.user)
 
 const goToSignin = () => {
   window.location.assign('/backoffice.html#/sign-in')
+}
+const goToProfil = () => {
+  window.location.assign('/backoffice.html#/profile')
 }
 
 const logout = () => {

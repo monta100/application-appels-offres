@@ -143,7 +143,6 @@ const fetchAppelsOffres = async () => {
   try {
     const res = await api.get('/appelle_offres/user');
     appelsOffres.value = res.data;
-    domaines.value = [...new Set(res.data.map(a => a.domaine))].map(d => d);
 
   } catch (err) {
     console.error("Erreur chargement appels d'offres :", err);
