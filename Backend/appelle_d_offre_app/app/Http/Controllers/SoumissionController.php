@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\soumission;
 use Illuminate\Http\Request;
+use App\Mail\SoumissionChoisieMail;
+use Illuminate\Support\Facades\Mail;
 
 class SoumissionController extends Controller
 {
@@ -13,25 +15,49 @@ class SoumissionController extends Controller
         return response()->json($soumissions);
     }
 
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'prixPropose' => 'required|numeric|min:0',
-            'description' => 'required|string',
-            'temps_realisation' => 'required|string',
-            'score_ia' => 'nullable|numeric|min:0|max:100',
-            'fichier_joint' => 'nullable|file|mimes:pdf,docx,doc|max:2048',
-            'idUser' => 'required|exists:users,id',
-            'idAppel' => 'required|exists:appelle_offres,idAppel',
-        ]);
+  public function store(Request $request)
+{
+    $validated = $request->validate([
+        'prixPropose' => 'required|numeric|min:0',
+        'description' => 'required|string',
+        'temps_realisation' => 'required|string',
+        'score_ia' => 'nullable|numeric|min:0|max:100',
+        'fichier_joint' => 'nullable|file|mimes:pdf,docx,doc|max:2048',
+        'idAppel' => 'required|exists:appelle_offres,idAppel',
+    ]);
 
-        if ($request->hasFile('fichier_joint')) {
-            $validated['fichier_joint'] = $request->file('fichier_joint')->store('fichiers_soumissions');
-        }
+    $validated['idUser'] = auth()->id(); // 🔥 prend automatiquement l’utilisateur connecté
 
-        $soumission = soumission::create($validated);
-        return response()->json($soumission, 201);
+
+// ✅ Vérifie si l'utilisateur a déjà soumis une proposition pour cet appel
+    $exists = Soumission::where('idUser', $validated['idUser'])
+                        ->where('idAppel', $validated['idAppel'])
+                        ->exists();
+
+    if ($exists) {
+        return response()->json([
+            'message' => '❌ Vous avez déjà soumis une proposition pour cet appel d\'offre.'
+        ], 409); // Code HTTP 409 = Conflict
     }
+
+
+
+
+
+
+    if ($request->hasFile('fichier_joint')) {
+$validated['fichier_joint'] = $request->file('fichier_joint')->store('fichiers_soumissions', 'public');
+    }
+
+
+
+
+
+    $soumission = soumission::create($validated);
+
+    return response()->json($soumission, 201);
+}
+
 
     public function show($id)
     {
@@ -49,13 +75,14 @@ class SoumissionController extends Controller
             'temps_realisation' => 'sometimes|required|string',
             'score_ia' => 'nullable|numeric|min:0|max:100',
             'fichier_joint' => 'nullable|file|mimes:pdf,docx,doc|max:2048',
-            'idUser' => 'sometimes|required|exists:users,id',
             'idAppel' => 'sometimes|required|exists:appelle_offres,idAppel',
         ]);
 
         if ($request->hasFile('fichier_joint')) {
             $validated['fichier_joint'] = $request->file('fichier_joint')->store('fichiers_soumissions');
         }
+
+        
 
         $soumission->update($validated);
         return response()->json($soumission);
@@ -68,4 +95,60 @@ class SoumissionController extends Controller
 
         return response()->json(['message' => 'Soumission supprimée avec succès.']);
     }
+    public function mesSoumissions()
+{
+    $userId = auth()->id();
+    $soumissions = Soumission::where('idUser', $userId)->get();
+    return response()->json($soumissions);
+}
+
+
+public function aDejaSoumis($idAppel)
+{
+    $userId = auth()->id();
+    $exists = \App\Models\soumission::where('idUser', $userId)
+        ->where('idAppel', $idAppel)
+        ->exists();
+
+    return response()->json(['exists' => $exists]);
+}
+
+
+public function getSoumissionsByAppel($idAppel)
+{
+    $soumissions = Soumission::with('user')  // Assure-toi que la relation user est définie
+        ->where('idAppel', $idAppel)
+        ->get();
+
+    return response()->json($soumissions);
+}
+
+public function choisir($id)
+{
+    $soumission = Soumission::with('user')->findOrFail($id);
+    
+    // Mettre à jour la soumission choisie (ex : champ `choisie`)
+    $soumission->choisie = true;
+    $soumission->save();
+
+    // Envoi de mail
+    Mail::to($soumission->user->email)->send(new SoumissionChoisieMail($soumission));
+
+    return response()->json(['message' => 'Soumission choisie']);
+}
+
+public function soumissionsChoisies(Request $request)
+{
+    $userId = $request->user()->idUser;
+
+    $soumissions = Soumission::with(['appelOffre.domaine', 'user', 'contrat'])
+        ->whereHas('appelOffre', function ($query) use ($userId) {
+            $query->where('idUser', $userId); // Seuls les appels d’offres du représentant connecté
+        })
+        ->where('choisie', true)
+        ->latest()
+        ->get();
+
+    return response()->json($soumissions);
+}
 }

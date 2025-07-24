@@ -5,7 +5,20 @@ import store from './store'
 import router from './router'
 import 'bootstrap/dist/js/bootstrap.bundle.min.js'
 import 'bootstrap/dist/css/bootstrap.min.css'
+import api from './Http/api';
 
+
+const token = localStorage.getItem('token');
+
+if (token) {
+  api.get('/user')
+    .then(res => {
+      store.commit('auth/setUser', res.data);
+    })
+    .catch(() => {
+      localStorage.removeItem('token');
+    });
+}
 
 // main.js
 

@@ -154,6 +154,14 @@
   </button>
 </td>
 
+<router-link
+  :to="`/appels/${appel.idAppel}/soumissions`"
+  class="btn btn-sm btn-info"
+>
+  👥 Voir participants
+</router-link>
+
+
           </tr>
         </tbody>
       </table>
@@ -220,12 +228,12 @@ import api from '@/Http/api';
 import Navbar from '@/components/Navbar.vue';
 import Footer from '@/components/Footer.vue';
 import AddOffre from './AddOffre.vue';
-const store = useStore();
-const router = useRouter();
+
 const appelsOffres = ref([]);
 const loading = ref(true);
 const user = computed(() => store.state.auth.user);
-
+const store = useStore();
+const router = useRouter();
 // Pagination
 const page = ref(1);
 const perPage = 5;

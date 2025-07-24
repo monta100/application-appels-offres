@@ -18,11 +18,11 @@
             <span></span>
             <span></span>
           </div>
-          <div class="main-menu">
+          <div class="main-menu"> 
             <ul class="nav-menu">
               <li><router-link to="/" exact>HOME</router-link></li>
-              <li><router-link to="/about">appelle_offres</router-link></li>
-              <li><router-link to="/job-category">consulter Mes Soumission</router-link></li>
+                <router-link @click="goToOffreCl" class="login" to="/OffreCl">Appelle offre</router-link>
+                <router-link @click="goToSoumission" class="login" to="/ mes_soumission">Consulter mes soumissions </router-link>
               <li>
                 <a href="#">BLOG</a>
                 <ul class="sub-menu">
@@ -96,11 +96,22 @@ const goToSignin = () => {
 const goToProfil = () => {
   window.location.assign('/backoffice.html#/profile')
 }
+const goToOffreCl =()=>
+
+{
+
+  window.location.assign('/offreCl')
+}
+const goToSoumission = () =>
+{
+
+  window.location.assign('/mes_soumission')
+}
 
 const logout = () => {
   store.dispatch('auth/logout')
   localStorage.removeItem('token')
-    window.location.href = '/sign-in'; // fallback
+    window.location.href = '/backoffice.html#/sign-in'; // fallback
 }
 
 onMounted(() => {

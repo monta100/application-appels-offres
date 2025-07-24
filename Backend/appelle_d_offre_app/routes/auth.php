@@ -66,3 +66,19 @@ Route::middleware('auth:sanctum')->get('/domaines', [DomainesController::class, 
 
 Route::middleware('auth:sanctum')->get('/users', [UserController::class, 'index']);
 Route::middleware('auth:sanctum')->patch('/users/{user}/toggle-active', [UserController::class, 'toggleActive']);
+
+
+
+Route::middleware('auth:sanctum')->get('/mes-soumissions', [SoumissionController::class, 'mesSoumissions']);
+
+
+Route::middleware('auth:sanctum')->delete('/soumissions/{id}', [SoumissionController::class, 'destroy']);
+
+Route::middleware('auth:sanctum')->get('/soumissions/verifier/{idAppel}', [SoumissionController::class, 'aDejaSoumis']);
+Route::get('/appels/{idAppel}/soumissions', [SoumissionController::class, 'getSoumissionsByAppel']);
+Route::post('/soumissions/{id}/choisir', [SoumissionController::class, 'choisir']);
+
+Route::post('/soumissions/{id}/generer-contrat', [ContratController::class, 'genererContratPourSoumission']);
+Route::get('/contrat/generer/{soumission}', [\App\Http\Controllers\ContratController::class, 'genererPDF']);
+
+Route::get('/soumissions/choisies', [SoumissionController::class, 'soumissionsChoisies']);

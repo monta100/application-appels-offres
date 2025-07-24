@@ -11,11 +11,15 @@ class AppelleOffresController extends Controller
     /**
      * Display a listing of the resource.
      */
-  public function index()
+public function index()
 {
-    $offres = appelle_offres::with(['user', 'domaine'])->latest()->get();
-    return response()->json($offres);
+    $appels = appelle_offres::with(['domaine', 'user'])
+                ->where('statut', '!=', 'brouillon')
+                ->get();
+
+    return response()->json($appels);
 }
+
 
 
     /**
@@ -40,10 +44,12 @@ class AppelleOffresController extends Controller
         'statut' => 'nullable|string',
         'date_publication' => 'nullable|date',
         'idDomaine' => 'required|exists:domaines,idDomaine',
-        'fichier_joint' => 'nullable|file|mimes:pdf,docx,doc|max:2048'
+        'fichier_joint' => 'nullable|file|mimes:pdf,docx,doc|max:2048',
+        'nomSociete' => 'string'
+
     ]);
 
-            
+     
 
     if ($request->hasFile('fichier_joint')) {
         $validated['fichier_joint'] = $request->file('fichier_joint')->store('fichiers_appels');

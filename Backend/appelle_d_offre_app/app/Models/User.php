@@ -28,6 +28,8 @@ class User extends Authenticatable
     'password',
     'telephone',
     'role',
+    'nomSociete', // ✅ ajouté ici
+
     ];
 
     /**
