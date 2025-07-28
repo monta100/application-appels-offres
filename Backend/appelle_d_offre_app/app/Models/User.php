@@ -66,5 +66,14 @@ public function domaines()
 }
 
 
+public function messagesEnvoyes()
+{
+    return $this->hasMany(Message::class, 'sender_id', 'idUser');
+}
+
+public function messagesRecus()
+{
+    return $this->hasMany(Message::class, 'receiver_id', 'idUser');
+}
 
 }

@@ -21,16 +21,16 @@
           <div class="main-menu"> 
             <ul class="nav-menu">
               <li><router-link to="/" exact>HOME</router-link></li>
-                <router-link @click="goToOffreCl" class="login" to="/OffreCl">Appelle offre</router-link>
-                <router-link @click="goToSoumission" class="login" to="/ mes_soumission">Consulter mes soumissions </router-link>
+               <li> <router-link @click="goToOffreCl" class="login" to="/OffreCl">Appelle offre</router-link> </li>
+             <li>  <router-link @click="goToSoumission" class="login" to="/ mes_soumission">Consulter mes soumissions </router-link> </li> 
               <li>
-                <a href="#">BLOG</a>
+                <a href="#">gestion soumissions</a>
                 <ul class="sub-menu">
-                  <li><router-link to="/blog-home">Blog Home</router-link></li>
+                  <li><router-link @click =" goTosoumissionchosiis"to="/">Les soumissions choisis</router-link></li>
                   <li><router-link to="/blog-details">Blog Details</router-link></li>
                 </ul>
               </li>
-              <li><router-link to="/contact">CONTACT</router-link></li>
+                  <li><router-link @click =" goTochat"to="/">chat</router-link></li>
               <li>
                 <a href="#">PAGES</a>
                 <ul class="sub-menu">
@@ -107,6 +107,15 @@ const goToSoumission = () =>
 
   window.location.assign('/mes_soumission')
 }
+    const goTosoumissionchosiis = ()  =>
+
+{
+  window.location.assign('/Soumission_chosi')
+}
+ const goTochat =()=>
+ {
+  window.location.assign('/chat')
+ }
 
 const logout = () => {
   store.dispatch('auth/logout')

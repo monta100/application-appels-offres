@@ -10,6 +10,7 @@ import soumettreProposition from '@/components/Gestion_Soumiison/soumettrePropos
 import MesSoumissions from '@/components/Gestion_Soumiison/MesSoumissions.vue';
 import SoumissionsAppel from '@/components/Gestion_Soumiison/SoumissionsAppel.vue'
 import ListSoumissionChoisie from '@/components/Gestion_Soumiison/ListSoumissionChoisie.vue'
+import Chat from '@/components/chat_enLigne/Chat.vue'
  const routes = [
   { path: '/', name: 'Home', component: Home },
   { path :'/appelles', name:'Appelle', component: list_appelle_offre},
@@ -23,7 +24,8 @@ import ListSoumissionChoisie from '@/components/Gestion_Soumiison/ListSoumission
 
 { path:'/appels/:idAppel/soumissions',name :'SoumissionsAppel',component : SoumissionsAppel},
 
-{ path:'/Soumission_chosi' ,name :'ListSoumissionChoisie.vue',component :ListSoumissionChoisie}
+{ path:'/Soumission_chosi' ,name :'ListSoumissionChoisie.vue',component :ListSoumissionChoisie},
+{ path:'/chat',name:'Chat',component :Chat}
 ]
 
 

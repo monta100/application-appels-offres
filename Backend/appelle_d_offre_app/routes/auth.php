@@ -1,10 +1,12 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Broadcast;
 use App\Http\Controllers\ContratController;
 use App\Http\Controllers\DomainesController;
 use App\Http\Controllers\Auth\UserController;
 use App\Http\Controllers\SoumissionController;
+use App\Http\Controllers\Auth\MessageController;
 use App\Http\Controllers\Auth\ProfileController;
 use App\Http\Controllers\AppelleOffresController;
 use App\Http\Controllers\Auth\GoogleAuthController;
@@ -53,9 +55,7 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::apiResource('appels', AppelleOffresController::class);});
 Route::middleware('auth:sanctum')->get('/appelle_offres/user', [AppelleOffresController::class, 'userAppels']);
 
-Route::middleware('auth:sanctum')->group(function () {
-    Route::apiResource('soumissions', SoumissionController::class);
-});
+
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('contrats', ContratController::class);
@@ -70,6 +70,10 @@ Route::middleware('auth:sanctum')->patch('/users/{user}/toggle-active', [UserCon
 
 
 Route::middleware('auth:sanctum')->get('/mes-soumissions', [SoumissionController::class, 'mesSoumissions']);
+Route::middleware('auth:sanctum')->get('/soumissions/choisies', [SoumissionController::class, 'soumissionsChoisies']);
+Route::middleware('auth:sanctum')->group(function () {
+    Route::apiResource('soumissions', SoumissionController::class);
+});
 
 
 Route::middleware('auth:sanctum')->delete('/soumissions/{id}', [SoumissionController::class, 'destroy']);
@@ -79,6 +83,16 @@ Route::get('/appels/{idAppel}/soumissions', [SoumissionController::class, 'getSo
 Route::post('/soumissions/{id}/choisir', [SoumissionController::class, 'choisir']);
 
 Route::post('/soumissions/{id}/generer-contrat', [ContratController::class, 'genererContratPourSoumission']);
-Route::get('/contrat/generer/{soumission}', [\App\Http\Controllers\ContratController::class, 'genererPDF']);
+Route::get('/contrat/generer/{soumission}', [ContratController::class, 'genererPDF']);
 
-Route::get('/soumissions/choisies', [SoumissionController::class, 'soumissionsChoisies']);
+
+
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/messages/{receiverId}', [MessageController::class, 'index']);
+    Route::post('/messages', [MessageController::class, 'store']);
+    Route::patch('/messages/{id}/seen', [MessageController::class, 'markAsSeen']);
+});
+
+
+Broadcast::routes(['middleware' => ['auth:sanctum']]);
