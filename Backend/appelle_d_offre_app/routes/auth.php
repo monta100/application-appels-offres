@@ -1,5 +1,9 @@
 <?php
 
+use App\Events\CallAccepted;
+use Illuminate\Http\Request;
+use App\Events\CallRequested;
+use App\Events\SignalReceived;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Broadcast;
 use App\Http\Controllers\ContratController;
@@ -96,3 +100,33 @@ Route::middleware('auth:sanctum')->group(function () {
 
 
 Broadcast::routes(['middleware' => ['auth:sanctum']]);
+
+
+Route::post('/video-call/request', function (Request $request) {
+    broadcast(new CallRequested(
+        $request->caller_id,
+        $request->receiver_id
+    ))->toOthers();
+
+    return response()->json(['status' => 'Call requested']);
+});
+
+
+Route::post('/video-call/accept', function (Request $request) {
+    broadcast(new CallAccepted(
+        $request->caller_id,
+        $request->receiver_id
+    ))->toOthers();
+
+    return response()->json(['status' => 'Call accepted']);
+});
+
+Route::post('/video-call/signal', function (Request $request) {
+    broadcast(new SignalReceived(
+        $request->from,
+        $request->type,
+        $request->data
+    ))->toOthers();
+
+    return response()->json(['status' => 'Signal sent']);
+});

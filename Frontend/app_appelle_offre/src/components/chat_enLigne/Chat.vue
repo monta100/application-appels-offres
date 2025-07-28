@@ -1,92 +1,114 @@
 <template>
-  <Navbar />
-  <div class="chat-wrapper">
-    <!-- Sidebar Membres -->
-    <aside class="sidebar">
-      <h4>Membres de l'application</h4>
-      <ul>
-        <li
-          v-for="user in users"
-          :key="user.idUser"
-          :class="{ active: selectedUser?.idUser === user.idUser }"
-          @click="selectUser(user)"
-          class="user-item"
-        >
-          <img :src="user.photo || defaultAvatar" alt="avatar" class="avatar" />
-          <div class="user-info">
-            <span class="name">{{ user.nom }} {{ user.prenom }}</span>
-            <span class="role">{{ user.role }}</span>
+  <div v-if="!inCall">
+    <Navbar />
+    <div class="chat-wrapper">
+      <!-- Sidebar Membres -->
+      <aside class="sidebar">
+        <h4>Membres de l'application</h4>
+        <ul>
+          <li
+            v-for="user in users"
+            :key="user.idUser"
+            :class="{ active: selectedUser?.idUser === user.idUser }"
+            @click="selectUser(user)"
+            class="user-item"
+          >
+            <img :src="user.photo || defaultAvatar" alt="avatar" class="avatar" />
+            <div class="user-info">
+              <span class="name">{{ user.nom }} {{ user.prenom }}</span>
+              <span class="role">{{ user.role }}</span>
+              <button
+                class="call-btn"
+                @click="sendCallRequest(user.idUser)"
+                :disabled="!currentUser"
+              >
+                📞
+              </button>
+            </div>
+          </li>
+        </ul>
+      </aside>
+
+      <!-- Zone de discussion -->
+      <main class="chat-area">
+        <header v-if="selectedUser" class="chat-header">
+          <img :src="selectedUser.photo || defaultAvatar" alt="avatar" class="chat-avatar" />
+          <div>
+            <h5>{{ selectedUser.nom }} {{ selectedUser.prenom }}</h5>
+            <small>{{ selectedUser.role }}</small>
           </div>
-        </li>
-      </ul>
-    </aside>
+        </header>
 
-    <!-- Zone de discussion -->
-    <main class="chat-area">
-      <header v-if="selectedUser" class="chat-header">
-        <img :src="selectedUser.photo || defaultAvatar" alt="avatar" class="chat-avatar" />
-        <div>
-          <h5>{{ selectedUser.nom }} {{ selectedUser.prenom }}</h5>
-          <small>{{ selectedUser.role }}</small>
-        </div>
-      </header>
+        <section class="chat-messages" ref="chatScroll">
+          <div
+            v-for="msg in messages"
+            :key="msg.idMessage"
+            class="msg-container"
+            :class="msg.sender_id === currentUser.idUser ? 'sent' : 'received'"
+          >
+            <div class="msg-content">
+              <div v-if="msg.content">{{ msg.content }}</div>
 
-      <section class="chat-messages" ref="chatScroll">
-        <div
-          v-for="msg in messages"
-          :key="msg.idMessage"
-          class="msg-container"
-          :class="msg.sender_id === currentUser.idUser ? 'sent' : 'received'"
-        >
-<div class="msg-content">
-  <!-- Texte du message -->
-  <div v-if="msg.content">{{ msg.content }}</div>
+              <template v-if="msg.file_path">
+                <div v-if="msg.file_path.endsWith('.pdf')">
+                  <a :href="`http://localhost:8000/storage/${msg.file_path}`" target="_blank">
+                    Voir le PDF
+                  </a>
+                </div>
+                <div v-else>
+                  <img
+                    :src="`http://localhost:8000/storage/${msg.file_path}`"
+                    alt="fichier"
+                    class="attached-image"
+                  />
+                </div>
+              </template>
+            </div>
+          </div>
+        </section>
 
-  <!-- Pièce jointe (si disponible) -->
-  <template v-if="msg.file_path">
-    <div v-if="msg.file_path.endsWith('.pdf')">
-<a :href="`http://localhost:8000/storage/${msg.file_path}`" target="_blank">Voir le PDF</a>
+        <footer v-if="selectedUser" class="chat-footer">
+          <form @submit.prevent="sendMessage" class="chat-input">
+            <label class="file-attach">
+              📎
+              <input type="file" @change="handleFile" accept="image/*,.pdf" hidden />
+            </label>
+
+            <div v-if="fileToSend" class="file-preview">
+              <div v-if="fileToSend.type === 'application/pdf'">
+                📎 Fichier PDF sélectionné : {{ fileToSend.name }}
+              </div>
+              <div v-else-if="fileToSend.type.startsWith('image/')">
+                <img :src="previewUrl" alt="aperçu" class="attached-image" />
+              </div>
+              <div v-else>
+                📎 Fichier sélectionné : {{ fileToSend.name }}
+              </div>
+            </div>
+
+            <input v-model="newMessage" type="text" placeholder="Écrire un message..." />
+            <button type="submit">Envoyer</button>
+          </form>
+        </footer>
+      </main>
     </div>
-    <div v-else>
-      <img
-:src="`http://localhost:8000/storage/${msg.file_path}`"
-        alt="fichier"
-        class="attached-image"
-      />
-    </div>
-  </template>
-</div>
 
-          
+    <!-- MODALE D’APPEL ENTRANT -->
+    <div v-if="showCallModal" class="modal-overlay">
+      <div class="modal-content">
+        <h3>📞 Appel entrant</h3>
+        <p>L'utilisateur ID {{ incomingCall?.callerId }} vous appelle.</p>
+        <div class="modal-buttons">
+          <button @click="acceptCall">✅ Accepter</button>
+          <button @click="rejectCall">❌ Refuser</button>
         </div>
-        
-      </section>
-
-      <footer v-if="selectedUser" class="chat-footer">
-        <form @submit.prevent="sendMessage" class="chat-input">
-          <label class="file-attach">
-            📎
-            <input type="file" @change="handleFile" accept="image/*,.pdf" hidden />
-          </label>
-
-          <!-- Aperçu fichier sélectionné -->
-<div v-if="fileToSend" class="file-preview">
-  <div v-if="fileToSend.type === 'application/pdf'">
-    📎 Fichier PDF sélectionné : {{ fileToSend.name }}
+      </div>
+    </div>
   </div>
-  <div v-else-if="fileToSend.type.startsWith('image/')">
-    <img :src="previewUrl" alt="aperçu" class="attached-image" />
-  </div>
+
+  <!-- APPEL VIDÉO -->
   <div v-else>
-    📎 Fichier sélectionné : {{ fileToSend.name }}
-  </div>
-</div>
-
-          <input v-model="newMessage" type="text" placeholder="Écrire un message..." />
-          <button type="submit">Envoyer</button>
-        </form>
-      </footer>
-    </main>
+    <VideoCall  @hangup="inCall = false"/>
   </div>
 </template>
 
@@ -95,6 +117,7 @@ import { ref, onMounted, nextTick } from 'vue'
 import api from '@/Http/api'
 import Navbar from '../Navbar.vue'
 import echo from '@/Ressource/echo'
+import VideoCall from './VideoCall.vue'
 const users = ref([])
 const messages = ref([])
 const currentUser = ref(null)
@@ -104,6 +127,9 @@ const chatScroll = ref(null)
 const defaultAvatar = "@/Backoffice/assets/img/default-avatar.jpg"           
 const fileToSend = ref(null)
 const previewUrl = ref(null)
+const incomingCall = ref(null) // { callerId: 2 }
+const showCallModal = ref(false)
+const inCall = ref(false)
 
 const fetchCurrentUser = async () => {
   const { data } = await api.get('/user')
@@ -192,7 +218,56 @@ onMounted(async () => {
         })
       }
     })
+
+
+
+  // 🎧 Écoute des appels entrants (après avoir currentUser)
+  echo.channel(`video-call.${currentUser.value.idUser}`)
+    .listen('CallRequested', (e) => {
+      console.log("📞 Appel entrant de :", e.callerId)
+      incomingCall.value = e
+      showCallModal.value = true
+    })
+echo.channel(`video-call.${currentUser.value.idUser}`)
+  .listen('CallAccepted', (e) => {
+    console.log("✅ Appel accepté par :", e.receiverId)
+    inCall.value = true
+  })
+
+
 })
+const sendCallRequest = async (receiverId) => {
+  if (!currentUser.value || !receiverId) return
+
+  try {
+    await api.post('/video-call/request', {
+      caller_id: currentUser.value.idUser,
+      receiver_id: receiverId
+    })
+    alert('Appel lancé !')
+  } catch (err) {
+    console.error("Erreur lors de l’appel :", err)
+  }
+}
+const acceptCall = async () => {
+  showCallModal.value = false
+  inCall.value = true
+
+  // Informer l’appelant que l’appel est accepté
+  await api.post('/video-call/accept', {
+    caller_id: incomingCall.value.callerId,
+    receiver_id: currentUser.value.idUser
+  })
+}
+
+
+
+const rejectCall = () => {
+  showCallModal.value = false
+  incomingCall.value = null
+}
+
+
 </script>
 
 <style scoped>
@@ -374,6 +449,65 @@ onMounted(async () => {
   position: absolute;
   top: 5px;
   right: 8px;
+}
+.call-btn {
+  background: #ff7900;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  padding: 10px 13px;
+  font-size: 18px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.call-btn:hover {
+  background: #cc6200;
+}
+
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.modal-content {
+  background: white;
+  padding: 2rem;
+  border-radius: 10px;
+  width: 320px;
+  text-align: center;
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 1rem;
+}
+
+.modal-buttons button {
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.modal-buttons button:first-child {
+  background: #28a745;
+  color: white;
+}
+
+.modal-buttons button:last-child {
+  background: #dc3545;
+  color: white;
 }
 
 </style>
