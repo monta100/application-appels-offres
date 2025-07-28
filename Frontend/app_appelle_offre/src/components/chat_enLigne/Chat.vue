@@ -3,41 +3,62 @@
     <Navbar />
     <div class="chat-wrapper">
       <!-- Sidebar Membres -->
-      <aside class="sidebar">
-        <h4>Membres de l'application</h4>
-        <ul>
-          <li
-            v-for="user in users"
-            :key="user.idUser"
-            :class="{ active: selectedUser?.idUser === user.idUser }"
-            @click="selectUser(user)"
-            class="user-item"
-          >
-            <img :src="user.photo || defaultAvatar" alt="avatar" class="avatar" />
-            <div class="user-info">
-              <span class="name">{{ user.nom }} {{ user.prenom }}</span>
-              <span class="role">{{ user.role }}</span>
-              <button
-                class="call-btn"
-                @click="sendCallRequest(user.idUser)"
-                :disabled="!currentUser"
-              >
-                📞
-              </button>
-            </div>
-          </li>
-        </ul>
-      </aside>
+ <!-- Sidebar Membres -->
+<aside class="sidebar">
+<div class="sidebar-header">
+  <i class="fas fa-users icon"></i>
+  <h4>Communauté de l’application</h4>
+</div>
+  <ul>
+    <li
+      v-for="user in users"
+      :key="user.idUser"
+      :class="{ active: selectedUser?.idUser === user.idUser }"
+      class="user-item"
+    >
+      <div class="user-card" @click="selectUser(user)">
+        <img :src="user.photo || defaultAvatar" alt="avatar" class="avatar-img" />
+
+        <div class="user-name">{{ user.nom }} {{ user.prenom }}</div>
+        <div class="user-role">{{ user.role }}</div>
+        
+      </div>
+
+      <!-- Bouton appel 📞 à gauche -->
+      <button
+        class="call-btn"
+        @click="sendCallRequest(user.idUser)"
+        :disabled="!currentUser"
+        title="Appeler"
+      >
+        📞
+      </button>
+    </li>
+  </ul>
+</aside>
+
 
       <!-- Zone de discussion -->
       <main class="chat-area">
-        <header v-if="selectedUser" class="chat-header">
-          <img :src="selectedUser.photo || defaultAvatar" alt="avatar" class="chat-avatar" />
-          <div>
-            <h5>{{ selectedUser.nom }} {{ selectedUser.prenom }}</h5>
-            <small>{{ selectedUser.role }}</small>
-          </div>
-        </header>
+      <header v-if="selectedUser" class="chat-header">
+  <div class="chat-header-left">
+    <img :src="selectedUser.photo || defaultAvatar" alt="avatar" class="chat-avatar" />
+    <div>
+      <h5>{{ selectedUser.nom }} {{ selectedUser.prenom }}</h5>
+      <small>{{ selectedUser.role }}</small>
+    </div>
+  </div>
+
+  <button
+    class="call-header-btn"
+    @click="sendCallRequest(selectedUser.idUser)"
+    :disabled="!currentUser"
+    title="Appeler"
+  >
+    📞
+  </button>
+</header>
+
 
         <section class="chat-messages" ref="chatScroll">
           <div
@@ -110,6 +131,9 @@
   <div v-else>
     <VideoCall  @hangup="inCall = false"/>
   </div>
+
+  <audio ref="ringtone" :src="ringtoneSrc" preload="auto" />
+
 </template>
 
 <script setup>
@@ -118,19 +142,22 @@ import api from '@/Http/api'
 import Navbar from '../Navbar.vue'
 import echo from '@/Ressource/echo'
 import VideoCall from './VideoCall.vue'
+import defaultAvatar from '@/Backoffice/assets/img/default-avatar.jpg'
+
 const users = ref([])
 const messages = ref([])
 const currentUser = ref(null)
 const selectedUser = ref(null)
 const newMessage = ref('')
 const chatScroll = ref(null)
-const defaultAvatar = "@/Backoffice/assets/img/default-avatar.jpg"           
 const fileToSend = ref(null)
 const previewUrl = ref(null)
 const incomingCall = ref(null) // { callerId: 2 }
 const showCallModal = ref(false)
 const inCall = ref(false)
 
+const ringtone = ref(null)
+const ringtoneSrc = '/audio/ring.mp3' // Assure-toi que ce fichier existe dans /public/audio/
 const fetchCurrentUser = async () => {
   const { data } = await api.get('/user')
   currentUser.value = data
@@ -217,7 +244,9 @@ onMounted(async () => {
           chatScroll.value.scrollTop = chatScroll.value.scrollHeight
         })
       }
-    })
+      
+    }
+  )
 
 
 
@@ -233,6 +262,12 @@ echo.channel(`video-call.${currentUser.value.idUser}`)
     console.log("✅ Appel accepté par :", e.receiverId)
     inCall.value = true
   })
+
+  .listen('CallRequested', (e) => {
+  incomingCall.value = e
+  showCallModal.value = true
+  playRingtone()
+})
 
 
 })
@@ -250,6 +285,9 @@ const sendCallRequest = async (receiverId) => {
   }
 }
 const acceptCall = async () => {
+
+    stopRingtone()
+
   showCallModal.value = false
   inCall.value = true
 
@@ -263,9 +301,27 @@ const acceptCall = async () => {
 
 
 const rejectCall = () => {
+
+    stopRingtone()
+
   showCallModal.value = false
   incomingCall.value = null
 }
+
+
+
+const playRingtone = () => {
+  ringtone.value?.play().catch(err => {
+    console.error("❌ Erreur lecture sonnerie :", err)
+  })
+}
+
+const stopRingtone = () => {
+  ringtone.value?.pause()
+  ringtone.value.currentTime = 0
+}
+
+
 
 
 </script>
@@ -288,11 +344,28 @@ const rejectCall = () => {
   overflow-y: auto;
 }
 
-.sidebar h4 {
+.sidebar-header {
+  background-color: #fff5e5; /* Orange très clair */
+  padding: 1rem;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
   margin-bottom: 1rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.sidebar-header h4 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
   color: #333;
 }
 
+.sidebar-header .icon {
+  color: #ff7900;
+  font-size: 1.5rem;
+}
 .user-item {
   display: flex;
   align-items: center;
@@ -310,13 +383,15 @@ const rejectCall = () => {
   color: white;
 }
 
-.avatar {
-  width: 38px;
-  height: 38px;
+.avatar-img {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;         /* ✅ Remplit parfaitement le cadre sans déformer */
   border-radius: 50%;
-  object-fit: cover;
-  background: #eee;
+  border: 2px solid #ff7900;
+  margin-bottom: 0.5rem;
 }
+
 
 .user-info .name {
   font-weight: 600;
@@ -337,19 +412,23 @@ const rejectCall = () => {
 
 .chat-header {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 1rem;
-  padding: 1rem;
-  background: white;
-  border-bottom: 1px solid #ddd;
+  background: #fff;
+  padding: 10px 20px;
+  border-bottom: 1px solid #eee;
 }
 
+
+.chat-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
 .chat-avatar {
-  width: 45px;
-  height: 45px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
-  object-fit: cover;
-  background: #eee;
 }
 
 .chat-messages {
@@ -359,6 +438,25 @@ const rejectCall = () => {
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
+}
+
+.call-header-btn {
+  background-color: #ff7f00;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 42px;
+  height: 42px;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 5px rgba(0,0,0,0.2);
+  transition: background 0.3s;
+}
+.call-header-btn:hover {
+  background-color: #e67300;
 }
 
 .msg-container {
