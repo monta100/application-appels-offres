@@ -49,7 +49,7 @@
     </div>
     <div v-else>
       <img
-        :src="`/storage/${msg.file_path}`"
+:src="`http://localhost:8000/storage/${msg.file_path}`"
         alt="fichier"
         class="attached-image"
       />
@@ -184,6 +184,8 @@ onMounted(async () => {
           idMessage: e.idMessage,
           content: e.content,
           sender_id: e.sender.idUser,
+          file_path: e.file_path, 
+
         })
         nextTick(() => {
           chatScroll.value.scrollTop = chatScroll.value.scrollHeight

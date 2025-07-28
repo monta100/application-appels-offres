@@ -28,8 +28,8 @@ class MessageController extends Controller
     {
         $request->validate([
             'receiver_id' => 'required|exists:users,idUser',
-            'content' => 'nullable|string',
-            'file' => 'nullable|file|max:5120',
+'content' => 'nullable|required_without:file|string',
+'file' => 'nullable|required_without:content|file|max:5120',
         ]);
 
         $filePath = null;
