@@ -130,3 +130,6 @@ Route::post('/video-call/signal', function (Request $request) {
 
     return response()->json(['status' => 'Signal sent']);
 });
+
+
+Route::post('/soumissions/{id}/scoring', [SoumissionController::class, 'scoring']);

@@ -458,6 +458,12 @@ const stopRingtone = () => {
 .call-header-btn:hover {
   background-color: #e67300;
 }
+.call-floating-btn {
+  transition: transform 0.2s ease;
+}
+.call-floating-btn:hover {
+  transform: scale(1.1);
+}
 
 .msg-container {
   max-width: 65%;

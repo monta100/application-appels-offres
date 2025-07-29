@@ -6,6 +6,7 @@ use App\Models\soumission;
 use Illuminate\Http\Request;
 use App\Mail\SoumissionChoisieMail;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Http;
 
 class SoumissionController extends Controller
 {
@@ -150,5 +151,33 @@ public function soumissionsChoisies(Request $request)
         ->get();
 
     return response()->json($soumissions);
+}
+
+
+
+
+public function scoring($id)
+{
+    $soumission = soumission::findOrFail($id);
+
+    // Appel vers Flask
+    $response = Http::post('http://127.0.0.1:5000/predict', [
+        'prixPropose' => $soumission->prixPropose,
+        'temps_realisation' => $soumission->temps_realisation,
+        'description' => $soumission->description,
+    ]);
+
+    if ($response->successful()) {
+        $score = $response->json()['score_ia'];
+        $soumission->score_ia = $score;
+        $soumission->save();
+
+        return response()->json([
+            'message' => '✅ Scoring effectué avec succès.',
+            'score_ia' => $score
+        ]);
+    } else {
+        return response()->json(['message' => 'Erreur lors du scoring'], 500);
+    }
 }
 }
