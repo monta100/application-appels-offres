@@ -6,6 +6,7 @@ use App\Events\CallRequested;
 use App\Events\SignalReceived;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Broadcast;
+use App\Http\Controllers\ChatbotController;
 use App\Http\Controllers\ContratController;
 use App\Http\Controllers\DomainesController;
 use App\Http\Controllers\Auth\UserController;
@@ -133,3 +134,34 @@ Route::post('/video-call/signal', function (Request $request) {
 
 
 Route::post('/soumissions/{id}/scoring', [SoumissionController::class, 'scoring']);
+Route::middleware('auth:sanctum')->post('/chatbot/create-offre', [ChatbotController::class, 'generateAndCreateOffer']);
+Route::post('/generate-soumission', [ChatbotController::class, 'genererSoumission']);
+
+
+//routes pour chatboot
+// Génération de soumission
+Route::post('/chatbot/generate-soumission', [ChatbotController::class, 'generateSoumission']);
+
+// Création d’appel d’offre depuis prompt
+Route::middleware('auth:sanctum')->post('/chatbot/create-appel-offre', [ChatbotController::class, 'createAppelOffreFromPrompt']);
+
+
+
+// Vérifier si la deadline est passée
+Route::get('/chatbot/check-deadline/{id}', [ChatbotController::class, 'checkDeadline']);
+
+// Vérifier si un contrat est généré
+Route::get('/chatbot/contrat-existe/{id}', [ChatbotController::class, 'isContratGenere']);
+
+
+
+
+// Aide à la rédaction
+
+Route::post('/chatbot/aide-redaction-soumission', [ChatbotController::class, 'aideRedactionSoumission']);
+Route::get('/chatbot/appels-recents', [ChatbotController::class, 'appelsRecents']);
+
+
+//route unifie pour toutes ces requettes 
+
+Route::post('/chatbot/unified', [ChatbotController::class, 'handleUnifiedChat']);

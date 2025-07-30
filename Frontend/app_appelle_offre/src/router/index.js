@@ -11,6 +11,7 @@ import MesSoumissions from '@/components/Gestion_Soumiison/MesSoumissions.vue';
 import SoumissionsAppel from '@/components/Gestion_Soumiison/SoumissionsAppel.vue'
 import ListSoumissionChoisie from '@/components/Gestion_Soumiison/ListSoumissionChoisie.vue'
 import Chat from '@/components/chat_enLigne/Chat.vue'
+import Assistant from '@/components/chatboot/Assistant.vue'
  const routes = [
   { path: '/', name: 'Home', component: Home },
   { path :'/appelles', name:'Appelle', component: list_appelle_offre},
@@ -25,7 +26,8 @@ import Chat from '@/components/chat_enLigne/Chat.vue'
 { path:'/appels/:idAppel/soumissions',name :'SoumissionsAppel',component : SoumissionsAppel},
 
 { path:'/Soumission_chosi' ,name :'ListSoumissionChoisie.vue',component :ListSoumissionChoisie},
-{ path:'/chat',name:'Chat',component :Chat}
+{ path:'/chat',name:'Chat',component :Chat},
+{ path:'/Assistant', name:'Assistant',component :Assistant}
 ]
 
 

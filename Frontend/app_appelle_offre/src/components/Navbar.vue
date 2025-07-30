@@ -23,6 +23,11 @@
               <li><router-link to="/" exact>HOME</router-link></li>
                <li> <router-link @click="goToOffreCl" class="login" to="/OffreCl">Appelle offre</router-link> </li>
              <li>  <router-link @click="goToSoumission" class="login" to="/ mes_soumission">Consulter mes soumissions </router-link> </li> 
+             <li>  <router-link @click="goToAssist" class="login" to="/Assistant">Assistance </router-link> </li> 
+
+
+
+             Assistant
               <li>
                 <a href="#">gestion soumissions</a>
                 <ul class="sub-menu">
@@ -116,6 +121,10 @@ const goToSoumission = () =>
  {
   window.location.assign('/chat')
  }
+
+ const goToAssist = ( )=>
+ {window.location.assign('/Assistant')}
+
 
 const logout = () => {
   store.dispatch('auth/logout')
