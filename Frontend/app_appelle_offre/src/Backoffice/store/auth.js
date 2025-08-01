@@ -13,6 +13,9 @@ const mutations = {
 
 const actions = {
   login({ commit }, userData) {
+
+      localStorage.setItem('user', JSON.stringify(userData)); // 🔥
+
     commit("setUser", userData);
   },
   logout({ commit }) {

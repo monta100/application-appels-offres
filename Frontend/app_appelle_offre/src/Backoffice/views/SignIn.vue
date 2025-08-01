@@ -119,21 +119,38 @@ api.get('/user', {
   methods: {
     ...mapMutations(["toggleEveryDisplay", "toggleHideConfig"]),
     
-  async login() {
-  this.errorMessage = ''; // reset avant chaque tentative
+async login() {
+  this.errorMessage = '';
   try {
     const response = await api.post('/login', {
       email: this.form.email,
       password: this.form.password
     });
 
+    const user = response.data.user;
     localStorage.setItem('token', response.data.access_token);
-    this.$store.commit('auth/setUser', response.data.user);
+    localStorage.setItem('user', JSON.stringify(user));
+    this.$store.commit('auth/setUser', user);
 
-    window.location.href = '/appelles'; // fallback
+    // 👉 Redirection dynamique selon le rôle
+    switch (user.role) {
+      case 'representant':
+        window.location.href = '/appelles';
+        break;
+      case 'participant':
+        window.location.href = '/offreCl';
+        break;
+      case 'admin':
+        window.location.href = 'http://localhost:5173/backoffice.html#/dashboard';
+        break;
+      default:
+        window.location.href = '/';
+        break;
+    }
+
   } catch (error) {
     if (error.response?.status === 403) {
-      this.errorMessage = "Votre compte est désactivé. Veuillez contacter le service d'administration.";
+      this.errorMessage = "Votre compte est désactivé. Veuillez contacter l'administration.";
     } else if (error.response?.status === 401) {
       this.errorMessage = "Email ou mot de passe incorrect.";
     } else if (error.response?.status === 422) {
@@ -141,10 +158,10 @@ api.get('/user', {
     } else {
       this.errorMessage = "Une erreur est survenue lors de la connexion.";
     }
-
     console.error(error);
   }
-},
+}
+,
 
 
     redirectToGoogle() {

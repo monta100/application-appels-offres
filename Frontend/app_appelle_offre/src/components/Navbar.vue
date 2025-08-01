@@ -19,31 +19,33 @@
             <span></span>
           </div>
           <div class="main-menu"> 
-            <ul class="nav-menu">
-              <li><router-link to="/" exact>HOME</router-link></li>
-               <li> <router-link @click="goToOffreCl" class="login" to="/OffreCl">Appelle offre</router-link> </li>
-             <li>  <router-link @click="goToSoumission" class="login" to="/ mes_soumission">Consulter mes soumissions </router-link> </li> 
-             <li>  <router-link @click="goToAssist" class="login" to="/Assistant">Assistance </router-link> </li> 
+           <ul class="nav-menu">
+  <li><router-link to="/">HOME</router-link></li>
 
+  <!-- Participant uniquement -->
+  <li v-if="role === 'participant'">
+    <router-link to="/OffreCl">Appel d'offre</router-link>
+  </li>
+  <li v-if="role === 'participant'">
+    <router-link to="/mes_soumission">Consulter mes soumissions</router-link>
+  </li>
 
+  <!-- Représentant uniquement -->
+  <li v-if="role === 'representant'">
+    <router-link to="/Appelles">Gestion des appels d'offres</router-link>
+  </li>
+  <li v-if="role === 'representant'">
+    <router-link to="/Soumission_chosi">Les soumissions choisies</router-link>
+  </li>
 
-              <li>
-                <a href="#">gestion soumissions</a>
-                <ul class="sub-menu">
-                  <li><router-link @click =" goTosoumissionchosiis"to="/">Les soumissions choisis</router-link></li>
-                  <li><router-link to="/blog-details">Blog Details</router-link></li>
-                </ul>
-              </li>
-                  <li><router-link @click =" goTochat"to="/">chat</router-link></li>
-              <li>
-                <a href="#">PAGES</a>
-                <ul class="sub-menu">
-                  <li><router-link to="/job-search">Job Search</router-link></li>
-                  <li><router-link to="/job-single">Job Single</router-link></li>
-                  <li><router-link to="/pricing">Pricing Plan</router-link></li>
-                  <li><router-link to="/elements">Elements</router-link></li>
-                </ul>
-              </li>
+  <!-- Les deux rôles -->
+  <li v-if="role === 'participant' || role === 'representant'">
+    <router-link to="/chat">Chat</router-link>
+  </li>
+
+  <li v-if="role === 'participant' || role === 'representant'">
+    <router-link to="/Assistant">Assistance</router-link>
+  </li>
 
               <!-- Auth buttons -->
               <li class="menu-btn" v-if="!user">
@@ -92,6 +94,8 @@ import { useRouter } from 'vue-router'
 const store = useStore()
 const router = useRouter()
 
+const role = computed(() => user.value?.role)
+
 const user = computed(() => store.state.auth.user)
 
 const goToSignin = () => {
@@ -131,6 +135,13 @@ const logout = () => {
     window.location.href = '/backoffice.html#/sign-in'; // fallback
 }
 
+ const goToAppelles =() =>
+ 
+ 
+ {
+
+  window.location.assign('/appelles')
+ }
 onMounted(() => {
   // jQuery stuff (si nécessaire)
   if (typeof window.$ === 'function') {
