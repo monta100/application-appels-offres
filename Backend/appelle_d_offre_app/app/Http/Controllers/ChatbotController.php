@@ -172,71 +172,57 @@ Format strict : pas de ```json ni autre balise autour du JSON.";
 
 
 
-    public function checkDeadline($id)
-    {
-        $appel = appelle_offres::findOrFail($id);
-        $deadline = Carbon::parse($appel->date_fin);
-        $isOver = now()->greaterThan($deadline);
 
-        return response()->json([
-            'success' => true,
-            'type' => 'deadline',
-            'expired' => $isOver,
-            'deadline' => $deadline->toDateString()
-        ]);
-    }
-
-   public function isContratGenere($input)
+  public function isContratGenere($input)
 {
-    // On cherche l'appel d'offre par titre approximatif
+    // 🔎 Cherche l’appel d’offre par titre
     $appel = appelle_offres::where('titre', 'like', '%' . $input . '%')->first();
 
     if (!$appel) {
         return response()->json([
+            'success' => false,
             'type' => 'erreur',
-            'error' => "Aucun appel d'offre trouvé avec un titre correspondant à \"$input\"."
+            'error' => "Aucun appel d'offre trouvé avec un titre similaire à \"$input\"."
         ], 404);
     }
 
-    // On récupère la soumission liée à cet appel (option : la plus récente ou la première)
-    $soumission = Soumission::where('idAppel', $appel->idAppel)->orderBy('created_at', 'desc')->first();
+    // 📌 Récupère toutes les soumissions de cet appel
+    $soumissions = Soumission::where('idAppel', $appel->idAppel)->get();
 
-    if (!$soumission) {
+    if ($soumissions->isEmpty()) {
         return response()->json([
+            'success' => false,
             'type' => 'erreur',
             'error' => "Aucune soumission trouvée pour l'appel d'offre \"$appel->titre\"."
         ], 404);
     }
 
-    // On cherche le contrat lié à la soumission
-    $contrat = Contrat::where('idSoumission', $soumission->idSoumission)->first();
+    // ✅ Vérifie si une soumission a un contrat associé (PDF ou non)
+    foreach ($soumissions as $soumission) {
+        if (Contrat::where('idSoumission', $soumission->idSoumission)->exists()) {
+            return response()->json([
+                'success' => true,
+                'type' => 'contrat',
+                'contrat_generé' => true,
+                'appel_offre' => $appel->titre,
+                'soumission_id' => $soumission->idSoumission,
+                'message' => "✅ Un contrat a bien été généré pour l’appel d’offre « {$appel->titre} ». Merci de consulter la page des contrats.",
+                'lien' => 'http://localhost:5173/Soumission_chosi',
 
-    if ($contrat) {
-        $fichierExiste = $contrat->fichier_pdf && Storage::disk('public')->exists($contrat->fichier_pdf);
-
-        return response()->json([
-            'success' => true,
-            'type' => 'contrat',
-            'contrat_generé' => true,
-            'appel_offre' => $appel->titre,
-            'soumission_id' => $soumission->idSoumission,
-            'contrat' => [
-                'idContrat' => $contrat->idContrat,
-                'date_signature' => $contrat->date_signature ?? 'Non définie',
-                'pdf_existe' => $fichierExiste,
-                'pdf_url' => $fichierExiste ? asset('storage/' . $contrat->fichier_pdf) : null
-            ]
-        ]);
+            ]);
+        }
     }
 
+    // ❌ Aucun contrat généré
     return response()->json([
         'success' => true,
         'type' => 'contrat',
         'contrat_generé' => false,
         'appel_offre' => $appel->titre,
-        'message' => "Aucun contrat encore généré pour l'appel d'offre \"$appel->titre\"."
+    'message' => "❌ Aucun contrat n’a encore été généré pour l’appel d’offre « {$appel->titre} ».",
     ]);
 }
+
 
 public function appelsRecents()
 {
@@ -256,7 +242,7 @@ public function appelsRecents()
 }
 
 
-    public function checkAppelDatesByTitre($titre, $typeDate = 'fin')
+   public function checkAppelDatesByTitre($titre, $typeDate = 'fin')
 {
     $appel = appelle_offres::where('titre', 'LIKE', '%' . $titre . '%')->first();
 
@@ -268,27 +254,23 @@ public function appelsRecents()
         ], 404);
     }
 
-    $dateDebut = \Carbon\Carbon::parse($appel->date_debut);
-    $dateFin = \Carbon\Carbon::parse($appel->date_fin);
+    if ($typeDate === 'debut') {
+        return response()->json([
+            'success' => true,
+            'type' => 'date_debut',
+            'data' => [
+                'date_debut' => \Carbon\Carbon::parse($appel->date_debut)->toDateString()
+            ]
+        ]);
+    }
 
-if ($typeDate === 'debut') {
+    // par défaut, on retourne la date de fin
     return response()->json([
         'success' => true,
-        'type' => 'date_debut',
+        'type' => 'date_fin',
         'data' => [
-            'date_debut' => $dateDebut->toDateString()
+            'date_fin' => \Carbon\Carbon::parse($appel->date_fin)->toDateString()
         ]
-    ]);
-}
-
-
-    $expired = now()->greaterThan($dateFin);
-
-    return response()->json([
-        'success' => true,
-        'type' => 'deadline',
-        'expired' => $expired,
-        'deadline' => $dateFin->toDateString()
     ]);
 }
 
@@ -308,11 +290,11 @@ Réponds UNIQUEMENT par : intention=xxxxx (aucune autre phrase ni ponctuation).
 
 Liste des intentions :
 - intention=creer_appel
-- intention=verifier_deadline
-- intention=verifier_debut
 - intention=verifier_contrat
 - intention=aide_redaction
-- intention=appels_recents";
+- intention=appels_recents;
+- intention=date_appel";
+
 
     // 🔍 Requête à l'IA
     $intentRaw = $this->askAI($intentPrompt);
@@ -330,24 +312,20 @@ Liste des intentions :
        case 'creer_appel':
 return $this->createAppelOffreFromPrompt(new Request(['message' => $userInput]));
 
-        case 'verifier_deadline':
-            if (!$titre) {
-                return response()->json(['type' => 'erreur', 'error' => 'Titre manquant pour la deadline.'], 400);
-            }
-            return $this->checkAppelDatesByTitre($titre, 'fin');
+       
 
-       case 'verifier_debut':
-    // meilleure extraction de titre
-    $titre = appelle_offres::where('titre', 'LIKE', '%' . $userInput . '%')->value('titre');
-    if (!$titre) return response()->json(['type' => 'erreur', 'error' => 'Titre introuvable.'], 404);
-    return $this->checkAppelDatesByTitre($titre, $intent === 'verifier_debut' ? 'debut' : 'fin');
+case 'verifier_contrat':
+    $titre = $this->extraireTitreAppel($userInput);
+    if (!$titre) {
+        return response()->json([
+            'type' => 'erreur',
+            'error' => 'Titre introuvable pour vérifier le contrat.'
+        ], 404);
+    }
+    return $this->isContratGenere($titre);
 
 
-        case 'verifier_contrat':
-            if (!$titre) {
-                return response()->json(['type' => 'erreur', 'error' => 'Nom de soumission manquant pour le contrat.'], 400);
-            }
-            return $this->isContratGenere($titre);
+
 
        case 'aide_redaction':
     // Nouvelle extraction robuste
@@ -365,14 +343,60 @@ return $this->aideRedactionSoumission(new Request(['nomAppel' => $titre]));
                 'intent_nettoye' => $intent,
                 'message' => "Je n'ai pas compris votre demande."
             ], 200);
+
+
+
+
+
+
+case 'date_appel':
+    $titre = $this->extraireTitreAppel($userInput); // ✔️
+
+    // Ajoute une logique de secours si besoin
+    if (!$titre && strlen($userInput) < 40) {
+        $titre = appelle_offres::where('titre', 'LIKE', '%' . $userInput . '%')->value('titre');
     }
+
+    if (!$titre) {
+        return response()->json([
+            'type' => 'date',
+            'success' => false,
+            'error' => "Titre de l'appel d'offre non spécifié."
+        ], 400);
+    }
+
+    $messageLower = strtolower($userInput);
+    $typeDate = str_contains($messageLower, 'début') || str_contains($messageLower, 'debut') || str_contains($messageLower, 'commence') ? 'debut' : 'fin';
+
+    return $this->checkAppelDatesByTitre($titre, $typeDate);
+    }}
+
+
+
+
+private function extraireTitreAppel($texte)
+{
+    // 1. Liste des titres connus
+    $titresExistants = appelle_offres::pluck('titre')->toArray();
+
+    // 2. Essayer d’extraire manuellement après les mots clés
+    preg_match('/(appel d’offre|appel|soumission|offre)[^a-zA-Z0-9]*([^\?]+)/i', $texte, $matches);
+    $extrait = isset($matches[2]) ? trim($matches[2]) : $texte;
+
+    // 3. Fuzzy matching : trouver le plus proche
+    $meilleurTitre = null;
+    $meilleureSimilarite = 0;
+
+    foreach ($titresExistants as $titre) {
+        similar_text(strtolower($extrait), strtolower($titre), $similarite);
+        if ($similarite > $meilleureSimilarite) {
+            $meilleureSimilarite = $similarite;
+            $meilleurTitre = $titre;
+        }
+    }
+
+    return $meilleureSimilarite >= 60 ? $meilleurTitre : null;
 }
-
-
-
-
-
-
 
 
 

@@ -1,7 +1,10 @@
 <template>
+
   <div class="chatbot-wrapper">
     <div class="chatbot-box">
-      <h2 class="title">Assistant Intelligent</h2>
+<div class="title-banner">
+  <i class="fas fa-robot"></i> Assistant Intelligent
+</div>
 
       <div class="chat-window">
         <div class="chat-history">
@@ -13,21 +16,20 @@
             <div class="user-bubble">🧑‍💻 {{ entry.question }}</div>
             <div class="bot-bubble" v-if="entry">
               <img src="/assets/images/bot-icon.png" class="bot-avatar" alt="Bot Avatar" />
-
-              <p><strong>🤖
-                <span v-if="entry.type === 'deadline' && entry.data?.deadline">
-                  L’appel d’offre se termine le {{ formatDate(entry.data.deadline) }}.
-                </span>
-                <span v-else-if="entry.type === 'date_debut' && entry.data?.date_debut">
-                  L’appel d’offre commence le {{ formatDate(entry.data.date_debut) }}.
-                </span>
-                <span v-else-if="entry.message">
-                  {{ entry.message }}
-                </span>
-                <span v-else>
-                  (Pas de réponse disponible)
-                </span>
-              </strong></p>
+<p><strong>🤖
+  <span v-if="entry.type === 'date_fin' && entry.data?.date_fin">
+    L’appel d’offre se termine le {{ formatDate(entry.data.date_fin) }}.
+  </span>
+  <span v-else-if="entry.type === 'date_debut' && entry.data?.date_debut">
+    L’appel d’offre commence le {{ formatDate(entry.data.date_debut) }}.
+  </span>
+  <span v-else-if="entry.message">
+    {{ entry.message }}
+  </span>
+  <span v-else>
+    (Pas de réponse disponible)
+  </span>
+</strong></p>
 
               <div v-if="entry.type === 'appels_recents' && Array.isArray(entry.data?.appels)">
                 <div
@@ -47,16 +49,15 @@
                   </ul>
                 </div>
               </div>
+<div v-else-if="entry.type === 'contrat'">
 
-            
+  <p :class="entry.contrat_generé ? 'text-success fw-bold' : 'text-danger fw-bold'">
+    <!-- Afficher le lien si contrat généré + lien dispo -->
+   
+  </p>
+</div>
 
-              <div v-else-if="entry.type === 'contrat'">
-                <p v-if="entry.data?.contrat_generé">
-                  ✅ Contrat généré :
-                  <a :href="entry.data.contrat?.pdf_url" target="_blank">Voir le PDF</a>
-                </p>
-                <p v-else>❌ Aucun contrat généré pour cette soumission.</p>
-              </div>
+
 
               <div v-else-if="entry.type === 'appel_offre_brouillon'">
                 <p>🤖 <strong>Appel d'offre généré en brouillon.</strong></p>
@@ -173,21 +174,50 @@ this.responseHistory.push({
         return `L’appel d’offre commence le ${this.formatDate(data.date_debut)}.`;
       }
 
-      if (type === 'contrat') {
-        return data?.contrat_generé
-          ? 'Un contrat a été généré.'
-          : 'Aucun contrat n’a été généré.';
-      }
+     if (type === 'contrat') {
+    if (data?.contrat_generé) {
+      const lien = data?.lien ?? 'http://localhost:5173/Soumission_chosi';
+      return `✅ Un contrat a bien été généré. Merci de consulter la page des contrats : ${lien}`;
+    } else {
+      return '❌ Aucun contrat n’a été généré pour cet appel d’offre.';
+    }
+  }
+
+
+if (type === 'date_debut' && data?.date_debut) {
+  return `📅 L’appel d’offre commence le ${this.formatDate(data.date_debut)}.`;
+}
+
+if (type === 'deadline' && data?.deadline) {
+  return `📅 L’appel d’offre se termine le ${this.formatDate(data.deadline)}.`;
+}
+
+// Nouveau fallback général (si jamais type === 'date' mais sans sous-type précis)
+if (type === 'date') {
+  return data?.error ?? "❌ Impossible d'obtenir la date de l’appel d’offre.";
+}
+
+
 
       return null;
     },
   },
 };
 </script>
+<style>
 
+</style>
 <style scoped>
 .chatbot-wrapper {
-  background: linear-gradient(to right, #fff3e0, #ffe0b2);
+
+   min-height: 100vh;
+  background-color: #fef9f5;
+  background-image: 
+    radial-gradient(circle at top left, #ffedd5 12%, transparent 40%),
+    radial-gradient(circle at bottom right, #ffe8cc 15%, transparent 40%);
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  padding: 2rem;
   min-height: 100vh;
   display: flex;
   justify-content: center;
@@ -197,7 +227,7 @@ this.responseHistory.push({
   background: #ffffff;
   padding: 2rem;
   border-radius: 20px;
-  box-shadow: 0 4px 25px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
   width: 100%;
   max-width: 720px;
   display: flex;
@@ -343,4 +373,16 @@ button:hover {
 .link-orange:hover {
   opacity: 0.8;
 }
+.title-banner {
+  background-color: #ffcc80;
+  color: #4e342e;
+  padding: 10px 20px;
+  border-radius: 10px 10px 0 0;
+  font-weight: 600;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 </style>
