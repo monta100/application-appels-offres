@@ -37,95 +37,140 @@ class ChatbotController extends Controller
             : response()->json(['error' => $response->json()], $response->status());
     }
 
-    public function generateSoumission(Request $request)
-    {
-        $description = $request->input('description');
-        $prompt = "Tu es un prestataire professionnel. Voici un projet : \"$description\".
-Génère une soumission JSON structurée avec un titre, une description, un prix cohérent et un temps de réalisation.";
+  public function createAppelOffreFromPrompt(Request $request)
+{
+    $message = $request->input('message');
 
+    if (!$message) {
         return response()->json([
-            'success' => true,
-            'type' => 'soumission',
-            'data' => $this->askAI($prompt)
-        ]);
+            'success' => false,
+            'type' => 'erreur',
+            'error' => 'Message requis.'
+        ], 400);
     }
 
-    public function createAppelOffreFromPrompt(Request $request)
-    {
-        $prompt = "Voici un prompt : \"" . $request->input('description') . "\".
+$prompt = "Voici un prompt : \"$message\".
 Génère un JSON avec :
 - titre (string)
 - description (string)
 - budget (float)
-- date_debut (YYYY-MM-DD)
-- date_fin (YYYY-MM-DD)
-- domaine (ex: informatique)";
+- date_debut (au format YYYY-MM-DD, à partir d'aujourd'hui)
+- date_fin (YYYY-MM-DD, après date_debut)
+- domaine (ex: informatique)
 
-        $response = $this->askAI($prompt);
-        $data = json_decode($response, true);
+Assure-toi que les dates sont valides et récentes. N'utilise pas 'YEAR-MONTH-DAY', remplace-les par de vraies dates.";
 
-        if (!isset($data['titre'], $data['description'], $data['budget'], $data['date_debut'], $data['date_fin'], $data['domaine'])) {
-            return response()->json(['success' => false, 'type' => 'erreur', 'error' => 'Champs manquants.'], 400);
+
+    $response = $this->askAI($prompt);
+
+    $data = json_decode($response, true);
+    $champsManquants = [];
+
+    if (!is_array($data)) {
+        return response()->json([
+            'success' => false,
+            'type' => 'erreur',
+            'error' => 'Réponse IA invalide.',
+            'debug' => $response
+        ], 400);
+    }
+
+    // Vérifie chaque champ
+    foreach (['titre', 'description', 'budget', 'date_debut', 'date_fin', 'domaine'] as $champ) {
+        if (empty($data[$champ])) {
+            $champsManquants[] = $champ;
+            $data[$champ] = null; // Assure qu'on peut insérer quand même
         }
+    }
 
-        $idDomaine = $this->resolveDomaineId($data['domaine']);
-        if (!$idDomaine) {
-            return response()->json(['success' => false, 'type' => 'erreur', 'error' => "Domaine non reconnu : " . $data['domaine']], 400);
-        }
+    // Gestion domaine
+    $idDomaine = $data['domaine'] ? $this->resolveDomaineId($data['domaine']) : null;
 
-        if (!auth()->check()) {
-            return response()->json(['success' => false, 'type' => 'erreur', 'error' => 'Utilisateur non authentifié.'], 401);
-        }
+    // Gestion user
+    if (!auth()->check()) {
+        return response()->json([
+            'success' => false,
+            'type' => 'erreur',
+            'error' => 'Utilisateur non authentifié.'
+        ], 401);
+    }
 
-        $appel = new appelle_offres();
-        $appel->titre = $data['titre'];
-        $appel->description = $data['description'];
-        $appel->budget = (float) $data['budget'];
-        $appel->date_debut = $data['date_debut'];
-        $appel->date_fin = $data['date_fin'];
-        $appel->idDomaine = $idDomaine;
-        $appel->idUser = auth()->id();
-        $appel->statut = 'publiee';
-        $appel->date_publication = now();
-        $appel->save();
+    // Création en brouillon
+    $appel = new appelle_offres();
+    $appel->titre = $data['titre'] ?? 'Sans titre';
+    $appel->description = $data['description'] ?? '';
+    $appel->budget = isset($data['budget']) ? (float)$data['budget'] : 0;
+    $appel->date_debut = $data['date_debut'] ?? now()->toDateString();
+    $appel->date_fin = $data['date_fin'] ?? now()->addDays(7)->toDateString();
+    $appel->idDomaine = $idDomaine;
+    $appel->idUser = auth()->id();
+    $appel->statut = 'brouillon'; // 👈 Brouillon au lieu de "publiee"
+    $appel->date_publication = now();
+    $appel->save();
 
+    return response()->json([
+        'success' => true,
+        'type' => 'appel_offre_brouillon',
+        'message' => 'Appel d\'offre généré en brouillon. Veuillez le compléter via l’interface.',
+        'incomplet' => count($champsManquants) > 0,
+        'champs_manquants' => $champsManquants,
+        'lien_modification' => url('http://localhost:5173/appelles'), // ou front URL complète
+        'data' => $appel
+    ]);
+}
+
+public function aideRedactionSoumission(Request $request)
+{
+    $nomAppel = $request->input('nomAppel');
+
+    $appel = appelle_offres::where('titre', 'LIKE', '%' . $nomAppel . '%')->first();
+
+    if (!$appel) {
+        return response()->json([
+            'success' => false,
+            'type' => 'erreur',
+            'message' => "Aucun appel d'offre nommé \"$nomAppel\""
+        ], 404);
+    }
+
+    $prompt = "Tu veux proposer une soumission pour \"$nomAppel\".
+Génère une soumission au format JSON uniquement, sans explication, avec les champs suivants :
+- prixPropose (en dinars tunisiens)
+- description (max 3 lignes)
+- temps_realisation (en jours ou semaines)
+
+Format strict : pas de ```json ni autre balise autour du JSON.";
+
+    $response = $this->askAI($prompt);
+
+    // 🧹 Nettoyage éventuel des balises Markdown s’il y en a
+    $cleaned = preg_replace('/```(json|text)?/i', '', $response);
+    $cleaned = trim($cleaned);
+
+    // 🧪 Essaye de parser comme JSON
+    $data = json_decode($cleaned, true);
+
+    if (is_array($data)) {
+        // ✅ JSON valide
         return response()->json([
             'success' => true,
-            'type' => 'appel_offre',
-            'message' => 'Appel d\'offre généré avec succès.',
-            'data' => $appel
+            'type' => 'aide_redaction',
+'message' => "Voici la proposition générée pour l’appel d’offre sélectionné.",
+            'data' => $data,
+            'nomAppel' => $nomAppel
         ]);
     }
 
-    public function aideRedactionSoumission(Request $request)
-    {
-        $nomAppel = $request->input('nomAppel');
-        $appel = appelle_offres::where('titre', 'LIKE', '%' . $nomAppel . '%')->first();
+    // ❌ JSON invalide → on retourne le texte brut généré
+    return response()->json([
+        'success' => true,
+        'type' => 'aide_redaction',
+        'message' => "Soumission générée (texte brut, non JSON)",
+        'message_ai' => $response  // ou $cleaned
+    ]);
+}
 
-        if (!$appel) {
-            return response()->json(['success' => false, 'type' => 'erreur', 'message' => "Aucun appel d'offre nommé \"$nomAppel\""], 404);
-        }
 
-        $prompt = "Tu veux proposer une soumission pour \"$nomAppel\".
-Génère une soumission JSON avec :
-- prixPropose en tnd
-- description
-- temps_realisation (jours ou semaines)";
-
-        $response = $this->askAI($prompt);
-        $data = json_decode($response, true);
-
-        if (!isset($data['prixPropose'], $data['description'], $data['temps_realisation'])) {
-            return response()->json(['success' => false, 'type' => 'erreur', 'error' => 'Champs IA manquants.'], 400);
-        }
-
-        return response()->json([
-            'success' => true,
-            'type' => 'aide_soumission',
-            'message' => "Soumission générée pour \"$nomAppel\"",
-            'data' => $data
-        ]);
-    }
 
     public function checkDeadline($id)
     {
@@ -193,94 +238,143 @@ Génère une soumission JSON avec :
     ]);
 }
 
+public function appelsRecents()
+{
+    $dateLimite = Carbon::now()->subDays(3)->startOfDay();
+    $appels = appelle_offres::where('created_at', '>=', $dateLimite)->get();
 
-    public function appelsRecents()
-    {
-        $dateLimite = Carbon::now()->subDays(3)->startOfDay();
-        $appels = appelle_offres::where('created_at', '>=', $dateLimite)->get();
+    return response()->json([
+        'success' => true,
+        'type' => 'appels_recents',
+        'message' => $appels->isEmpty()
+            ? "Aucun appel d'offre récent trouvé."
+            : "Appels d’offres récents :",
+        'data' => [
+            'appels' => $appels
+        ]
+    ]);
+}
 
+
+    public function checkAppelDatesByTitre($titre, $typeDate = 'fin')
+{
+    $appel = appelle_offres::where('titre', 'LIKE', '%' . $titre . '%')->first();
+
+    if (!$appel) {
         return response()->json([
-            'success' => true,
-            'type' => 'appels_recents',
-            'message' => $appels->isEmpty()
-                ? "Aucun appel d'offre récent trouvé."
-                : "Appels d’offres récents :",
-            'data' => $appels
-        ]);
+            'success' => false,
+            'type' => 'date',
+            'error' => "Aucun appel d'offre trouvé pour le titre \"$titre\"."
+        ], 404);
     }
 
-   public function handleUnifiedChat(Request $request)
+    $dateDebut = \Carbon\Carbon::parse($appel->date_debut);
+    $dateFin = \Carbon\Carbon::parse($appel->date_fin);
+
+if ($typeDate === 'debut') {
+    return response()->json([
+        'success' => true,
+        'type' => 'date_debut',
+        'data' => [
+            'date_debut' => $dateDebut->toDateString()
+        ]
+    ]);
+}
+
+
+    $expired = now()->greaterThan($dateFin);
+
+    return response()->json([
+        'success' => true,
+        'type' => 'deadline',
+        'expired' => $expired,
+        'deadline' => $dateFin->toDateString()
+    ]);
+}
+
+
+
+
+
+public function handleUnifiedChat(Request $request)
 {
     $userInput = $request->input('message');
 
+    // ✅ PROMPT AMÉLIORÉ
     $intentPrompt = "Voici une requête utilisateur : \"$userInput\".
-Identifie clairement son intention parmi :
-- générer une soumission
-- créer un appel d'offre
-- vérifier la deadline
-- vérifier un contrat
-- aide à la rédaction
-- appels récents
 
-Réponds uniquement par : intention=xxx";
+Donne UNIQUEMENT l’intention de cette requête parmi la liste ci-dessous.
+Réponds UNIQUEMENT par : intention=xxxxx (aucune autre phrase ni ponctuation).
 
+Liste des intentions :
+- intention=creer_appel
+- intention=verifier_deadline
+- intention=verifier_debut
+- intention=verifier_contrat
+- intention=aide_redaction
+- intention=appels_recents";
+
+    // 🔍 Requête à l'IA
     $intentRaw = $this->askAI($intentPrompt);
+    logger('Intent IA détecté : ' . $intentRaw);
+
     $intent = strtolower(trim(str_replace('intention=', '', $intentRaw)));
 
-    // ⬇️ Détection souple d’intention
-    if (str_contains($intent, 'générer') && str_contains($intent, 'soumission')) {
-        return $this->generateSoumission(new Request(['description' => $userInput]));
-    }
-
-    if (str_contains($intent, 'créer') && str_contains($intent, 'appel')) {
-        return $this->createAppelOffreFromPrompt(new Request(['description' => $userInput]));
-    }
-
-    if (str_contains($intent, 'deadline')) {
-        if (preg_match('/\b(\d+)\b/', $userInput, $matches)) {
-            return $this->checkDeadline($matches[1]);
-        }
-        return response()->json(['type' => 'erreur', 'error' => 'ID de deadline manquant.'], 400);
-    }
-
- if (str_contains($intent, 'contrat')) {
-    // Tenter d'extraire un titre de l'appel d'offre depuis l'entrée utilisateur
-    preg_match('/soumission.*?(?:de|du|pour)?\s*(.+)/i', $userInput, $matches);
+    // 🔎 Extraction du titre si nécessaire
+    preg_match('/(?:appel|offre|soumission)[^a-zA-Z0-9]*([^\?]+)/i', $userInput, $matches);
     $titre = isset($matches[1]) ? trim($matches[1]) : null;
 
-    if (!$titre) {
-        return response()->json([
-            'type' => 'erreur',
-            'error' => 'Titre de l’appel d’offre manquant dans la requête.'
-        ], 400);
+    // 🧠 Routing selon l’intention détectée
+    switch ($intent) {
+       
+       case 'creer_appel':
+return $this->createAppelOffreFromPrompt(new Request(['message' => $userInput]));
+
+        case 'verifier_deadline':
+            if (!$titre) {
+                return response()->json(['type' => 'erreur', 'error' => 'Titre manquant pour la deadline.'], 400);
+            }
+            return $this->checkAppelDatesByTitre($titre, 'fin');
+
+       case 'verifier_debut':
+    // meilleure extraction de titre
+    $titre = appelle_offres::where('titre', 'LIKE', '%' . $userInput . '%')->value('titre');
+    if (!$titre) return response()->json(['type' => 'erreur', 'error' => 'Titre introuvable.'], 404);
+    return $this->checkAppelDatesByTitre($titre, $intent === 'verifier_debut' ? 'debut' : 'fin');
+
+
+        case 'verifier_contrat':
+            if (!$titre) {
+                return response()->json(['type' => 'erreur', 'error' => 'Nom de soumission manquant pour le contrat.'], 400);
+            }
+            return $this->isContratGenere($titre);
+
+       case 'aide_redaction':
+    // Nouvelle extraction robuste
+    $titre = appelle_offres::where('titre', 'LIKE', '%' . $userInput . '%')->value('titre');
+return $this->aideRedactionSoumission(new Request(['nomAppel' => $titre]));
+
+
+        case 'appels_recents':
+            return $this->appelsRecents();
+
+        default:
+            return response()->json([
+                'type' => 'inconnu',
+                'intent_recu' => $intentRaw,
+                'intent_nettoye' => $intent,
+                'message' => "Je n'ai pas compris votre demande."
+            ], 200);
     }
-
-    return $this->isContratGenere($titre); // 👈 Utilisation par titre maintenant
 }
 
 
 
-  if (str_contains($intent, 'aide') && str_contains($intent, 'rédaction')) {
-    // 🔍 Extraire uniquement le titre d'appel d'offre de la requête
-    preg_match('/appel (d\'offre)?\s*(.+)/i', $userInput, $matches);
-    $titre = isset($matches[2]) ? trim($matches[2]) : $userInput;
-
-    return $this->aideRedactionSoumission(new Request(['nomAppel' => $titre]));
-}
 
 
-    if (str_contains($intent, 'appel') && str_contains($intent, 'récent')) {
-        return $this->appelsRecents();
-    }
 
-    // 👇 Debug (optionnel, à retirer en production)
-    return response()->json([
-        'type' => 'inconnu',
-        'intent_recu' => $intentRaw,
-        'intent_nettoye' => $intent,
-        'message' => "Je n'ai pas compris votre demande."
-    ], 200);
-}
+
+
 
     private function resolveDomaineId($nom)
     {

@@ -27,7 +27,6 @@
 
 
 
-             Assistant
               <li>
                 <a href="#">gestion soumissions</a>
                 <ul class="sub-menu">
