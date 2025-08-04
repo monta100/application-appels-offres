@@ -12,6 +12,7 @@ import SoumissionsAppel from '@/components/Gestion_Soumiison/SoumissionsAppel.vu
 import ListSoumissionChoisie from '@/components/Gestion_Soumiison/ListSoumissionChoisie.vue'
 import Chat from '@/components/chat_enLigne/Chat.vue'
 import Assistant from '@/components/chatboot/Assistant.vue'
+import Profile from '@/components/Users/Profile.vue'
  const routes = [
   { path: '/', name: 'Home', component: Home },
   { path :'/appelles', name:'Appelle', component: list_appelle_offre,meta: { role: 'representant' }},
@@ -27,7 +28,8 @@ import Assistant from '@/components/chatboot/Assistant.vue'
 
 { path:'/Soumission_chosi' ,name :'ListSoumissionChoisie.vue',component :ListSoumissionChoisie,meta: { role: 'representant' }},
 { path:'/chat',name:'Chat',component :Chat},
-{ path:'/Assistant', name:'Assistant',component :Assistant}
+{ path:'/Assistant', name:'Assistant',component :Assistant},
+{ path :'/Profil',name:'Profil',component:Profile}
 ]
 
 

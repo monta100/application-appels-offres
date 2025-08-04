@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Storage;
 
 class ProfileController extends Controller
 {
@@ -18,35 +19,51 @@ class ProfileController extends Controller
 {
     $user = $request->user();
 
-    // Ne mettre à jour que les champs fournis
-    $validated = $request->only([
-        'nom', 'prenom', 'email', 'telephone', 'password', 'password_confirmation'
+    // Validation
+    $request->validate([
+        'nom' => 'nullable|string|max:255',
+        'prenom' => 'nullable|string|max:255',
+        'telephone' => 'nullable|string|max:20',
+        'email' => 'nullable|email|unique:users,email,' . $user->idUser,
+        'password' => 'nullable|confirmed|min:6',
+        'avatar' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
     ]);
 
-    if (isset($validated['email']) && $validated['email'] !== $user->email) {
-        $request->validate([
-            'email' => 'email|unique:users,email,' . $user->id,
-        ]);
-        $user->email = $validated['email'];
-        $user->email_verified_at = null;
-    }
-
-    foreach (['nom', 'prenom', 'telephone'] as $field) {
-        if (isset($validated[$field])) {
-            $user->$field = $validated[$field];
+    // Mettre à jour les champs seulement s’ils sont remplis
+    foreach (['nom', 'prenom', 'email', 'telephone'] as $field) {
+        if ($request->filled($field)) {
+            $user->$field = $request->$field;
         }
     }
 
-    if (isset($validated['password'])) {
-        $request->validate([
-            'password' => 'required|confirmed|min:6'
-        ]);
-        $user->password = bcrypt($validated['password']);
+    // Mot de passe
+    if ($request->filled('password')) {
+        $user->password = bcrypt($request->password);
     }
 
-    $user->save();
+    // Avatar
+    if ($request->hasFile('avatar')) {
+        if ($user->avatar && Storage::disk('public')->exists($user->avatar)) {
+            Storage::disk('public')->delete($user->avatar);
+        }
 
-    return response()->json(['message' => 'Profil mis à jour.']);
+        $path = $request->file('avatar')->store('avatars', 'public');
+        $user->avatar = $path;
+    }
+
+    // ⚠️ Vérifie si quelque chose a vraiment changé
+    if ($user->isDirty()) {
+        $user->save();
+
+        return response()->json([
+            'message' => '✅ Profil mis à jour avec succès.',
+            'avatar_url' => $user->avatar ? asset('storage/' . $user->avatar) : null
+        ]);
+    }
+
+    return response()->json([
+        'message' => 'ℹ️ Aucun changement détecté.',
+        'avatar_url' => $user->avatar ? asset('storage/' . $user->avatar) : null
+    ]);
 }
-
 }

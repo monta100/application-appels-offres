@@ -51,7 +51,7 @@ Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
     ->name('logout');
 
 
-Route::middleware('auth:sanctum')->put('/profil', [ProfileController::class, 'update']);
+Route::middleware('auth:sanctum')->match(['put', 'post'], '/profil', [ProfileController::class, 'update']);
 Route::get('/auth/google', [GoogleAuthController::class, 'redirectToGoogle']);
 Route::get('/auth/google/callback', [GoogleAuthController::class, 'handleGoogleCallback']);
 

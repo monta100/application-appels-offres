@@ -19,7 +19,7 @@
             <span></span>
           </div>
           <div class="main-menu"> 
-           <ul class="nav-menu">
+<ul class="nav-menu d-flex align-items-center">
   <li><router-link to="/">HOME</router-link></li>
 
   <!-- Participant uniquement -->
@@ -52,31 +52,44 @@
                 <router-link @click="goToSignin" class="login" to="/login">LOG IN</router-link>
                 <router-link class="template-btn" to="/register">SIGN UP</router-link>
               </li>
-
-              <!-- User connected dropdown -->
-         <li class="nav-item dropdown" v-else>
+<li class="nav-item dropdown" v-else>
   <button
-    class="btn btn-sm dropdown-toggle"
+    class="btn d-flex align-items-center gap-2 px-2 py-1 dropdown-toggle"
     type="button"
     data-bs-toggle="dropdown"
     aria-expanded="false"
-    style="background-color: #ff6b00; color: white; font-weight: 500; border-radius: 10px; padding: 6px 12px;"
+    style="background: linear-gradient(135deg, #ff6b00, #ff9100); color: white; border-radius: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); font-weight: 600;"
   >
-    <i class="fa fa-user me-1"></i> {{ user.prenom }} {{ user.nom }}
+    <img
+      :src="getAvatarUrl(user.avatar)"
+      alt="Avatar"
+      class="rounded-circle border"
+      width="34"
+      height="34"
+      style="object-fit: cover;"
+    />
+    <div class="d-flex flex-column align-items-start lh-sm text-start">
+      <span>{{ user.prenom }} {{ user.nom }}</span>
+      <small style="font-size: 0.7rem; opacity: 0.85;">{{ user.role }}</small>
+    </div>
+    <i class="fa fa-chevron-down ms-1" style="font-size: 0.7rem;"></i>
   </button>
-  <ul class="dropdown-menu dropdown-menu-end mt-2 shadow-sm animate__animated animate__fadeIn">
+
+  <ul class="dropdown-menu dropdown-menu-end mt-2 shadow border-0 animate__animated animate__fadeIn">
     <li>
-      <router-link class="dropdown-item" to="/backoffice.html#/profile">
-        <i class="fa fa-id-card me-2"></i> Profil
+      <router-link to="/profil" class="dropdown-item d-flex align-items-center gap-2">
+        <i class="fa fa-user-circle text-primary"></i> Mon Profil
       </router-link>
     </li>
+    <li><hr class="dropdown-divider"></li>
     <li>
-      <button class="dropdown-item text-danger" @click="logout">
-        <i class="fa fa-sign-out-alt me-2"></i> Se déconnecter
+      <button class="dropdown-item d-flex align-items-center gap-2 text-danger" @click="logout">
+        <i class="fa fa-sign-out-alt"></i> Se déconnecter
       </button>
     </li>
   </ul>
 </li>
+
 
             </ul>
           </div>
@@ -142,6 +155,12 @@ const logout = () => {
 
   window.location.assign('/appelles')
  }
+
+const defaultAvatar = '/Backoffice/assets/img/default-avatar.jpg';
+
+ const getAvatarUrl = (avatarPath) => {
+  return avatarPath ? `http://localhost:8000/storage/${avatarPath}` : defaultAvatar;
+};
 onMounted(() => {
   // jQuery stuff (si nécessaire)
   if (typeof window.$ === 'function') {
