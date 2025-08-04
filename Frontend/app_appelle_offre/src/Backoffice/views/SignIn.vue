@@ -23,9 +23,12 @@
           </div>
 
           <div class="mb-3 text-end">
-  <router-link :to="{ name: 'ForgotPassword' }"class="text-orange fw-bold mb-2">>
-    Forgot your password?
-  </router-link>
+<router-link @click.prevent="showForgot = true" to="#" class="text-orange fw-bold mb-2">
+  Mot de passe oublié ?
+</router-link>
+
+
+
 </div>
 
 
@@ -63,20 +66,31 @@
       </div>
     </div>
   </div>
+
+  <!-- Modal ForgotPassword -->
+<ForgotPassword v-if="showForgot" @close="showForgot = false" />
 </template>
 
 <script>
 import api from '@/Http/api';
 import { mapMutations } from 'vuex';
 import loginBg from '@/Backoffice/assets/img/logos/login-bg.png';
-
+import ForgotPassword from './ForgotPassword.vue';
 const body = document.getElementsByTagName("body")[0];
 
 export default {
   name: "SignIn",
+  components: {
+  ForgotPassword
+},
+
   data() {
+
+
     return {
-      form: {
+     showForgot: false,
+
+      form:{
         email: '',
         password: '',
         remember: false

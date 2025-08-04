@@ -1,9 +1,13 @@
 <template>
-  <div class="container d-flex align-items-center justify-content-center min-vh-100 bg-light">
-    <div class="card p-4 shadow rounded-4" style="min-width: 400px;">
-      <h4 class="mb-3 text-center">Reset Password</h4>
+  <div class="forgot-modal-overlay">
+    <div class="card forgot-modal-box p-4 shadow rounded-4">
+      <button class="btn-close-modal" @click="$emit('close')">
+        <i class="fa fa-times"></i>
+      </button>
+
+      <h4 class="mb-3 text-center">🔐 Réinitialiser le mot de passe</h4>
       <p class="text-muted text-center mb-4">
-        Enter your email address to receive a password reset link.
+        Entrez votre adresse e-mail pour recevoir un lien de réinitialisation.
       </p>
 
       <form @submit.prevent="sendResetLink">
@@ -14,21 +18,19 @@
             type="email"
             class="form-control rounded-pill"
             required
-            placeholder="you@example.com"
+            placeholder="vous@exemple.com"
           />
         </div>
-        <button class="btn btn-success w-100 rounded-pill" type="submit">
-          Send Reset Link
+        <button class="btn btn-orange w-100 rounded-pill" type="submit">
+          📩 Envoyer le lien
         </button>
       </form>
 
-      <!-- ✅ Notification verte si succès -->
-      <div v-if="successMessage" class="alert alert-success mt-3 text-center" role="alert">
+      <div v-if="successMessage" class="alert alert-orange mt-3 text-center" role="alert">
         {{ successMessage }}
       </div>
 
-      <!-- ❌ Notification rouge si erreur -->
-      <div v-if="errorMessage" class="alert alert-danger mt-3 text-center" role="alert">
+      <div v-if="errorMessage" class="alert alert-orange border-danger mt-3 text-center" role="alert">
         {{ errorMessage }}
       </div>
     </div>
@@ -51,15 +53,12 @@ export default {
     async sendResetLink() {
       try {
         await api.post('/forgot-password', { email: this.email });
-        this.successMessage = '✅ Le lien de réinitialisation a été envoyé avec succès.';
+        this.successMessage = '✅ Lien envoyé avec succès !';
         this.errorMessage = '';
-
-        // Optionnel : vider le champ
         this.email = '';
 
-        // Optionnel : rediriger après 3 secondes
         setTimeout(() => {
-          this.$router.push({ name: 'Sign In' });
+          this.$emit('close');
         }, 3000);
       } catch (err) {
         this.errorMessage = err.response?.data?.message || '❌ Une erreur est survenue.';
@@ -69,3 +68,68 @@ export default {
   }
 };
 </script>
+
+<style scoped>
+.forgot-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 999;
+  background: rgba(0, 0, 0, 0.4);
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.forgot-modal-box {
+  background: white;
+  width: 90%;
+  max-width: 420px;
+  position: relative;
+  animation: fadeIn 0.3s ease;
+}
+
+.btn-close-modal {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  border: none;
+  background: transparent;
+  font-size: 1.2rem;
+  color: #888;
+  cursor: pointer;
+}
+
+.btn-orange {
+  background-color: #f97316;
+  color: white;
+  font-weight: bold;
+  transition: background-color 0.3s ease;
+}
+
+.btn-orange:hover {
+  background-color: #ea580c;
+}
+
+.alert-orange {
+  background-color: #fff7ed;
+  border: 1px solid #f97316;
+  color: #b45309;
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 0.95rem;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+</style>
