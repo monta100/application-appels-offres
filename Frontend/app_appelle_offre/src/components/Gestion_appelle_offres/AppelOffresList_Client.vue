@@ -21,9 +21,13 @@
         >
           <div class="card card-appel w-100 shadow-lg border-0">
             <!-- Statut -->
-            <div class="badge-statut" :class="appel.statut === 'cloturé' ? 'bg-danger' : 'bg-success'">
-              {{ appel.statut.toUpperCase() }}
-            </div>
+  <div
+  class="badge-statut"
+  :class="checkStatutAutomatique(appel) === 'cloturé' ? 'bg-danger' : 'bg-success'"
+>
+  {{ checkStatutAutomatique(appel).toUpperCase() }}
+</div>
+
 
             <div class="card-body d-flex flex-column">
               <h5 class="fw-bold text-orange mb-2">
@@ -38,12 +42,6 @@
                 <li><i class="fas fa-user me-2 text-orange"></i><strong>Publié par :</strong> {{ appel.user?.nomSociete || '—' }}</li>
               </ul>
 
-              <button
-                class="btn btn-orange mt-auto"
-                @click="participer(appel)"
-                :disabled="appel.statut === 'brouillon'"
-              >
-add to favoris              </button>
               <router-link
   :to="`/offre/${appel.idAppel}`"
   class="btn btn-orange-light me-2"
@@ -110,6 +108,20 @@ onMounted(async () => {
     return;
   }
 });
+
+
+const checkStatutAutomatique = (appel) => {
+  const today = new Date();
+  const dateFin = new Date(appel.date_fin);
+
+  // Si la date de fin est passée et que le statut n'est pas déjà "cloturé"
+  if (dateFin < today && appel.statut.toLowerCase() !== 'cloturé') {
+    return 'cloturé';
+  }
+
+  return appel.statut;
+};
+
 </script>
 
 <style scoped>

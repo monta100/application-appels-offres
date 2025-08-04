@@ -3,42 +3,35 @@
   <div class="container py-5 min-vh-100">
     <div class="card shadow p-4 mx-auto" style="max-width: 700px">
       <h2 class="text-orange fw-bold mb-4">Soumettre une proposition</h2>
+<form @submit.prevent="submitForm" enctype="multipart/form-data">
+  <div class="mb-3">
+    <label class="form-label">Prix proposé (TND)</label>
+    <input v-model.number="form.prixPropose" type="number" class="form-control" />
+    <small class="text-danger" v-if="errors.prixPropose">{{ errors.prixPropose }}</small>
+  </div>
 
-      <form @submit.prevent="submitForm" enctype="multipart/form-data">
-        <div class="mb-3">
-          <label class="form-label">Prix proposé (TND)</label>
-          <input v-model="form.prixPropose" type="number" class="form-control" required min="0" />
-        </div>
+  <div class="mb-3">
+    <label class="form-label">Description</label>
+    <textarea v-model="form.description" class="form-control" rows="4"></textarea>
+    <small class="text-danger" v-if="errors.description">{{ errors.description }}</small>
+  </div>
 
-        <div class="mb-3">
-          <label class="form-label">Description</label>
-          <textarea v-model="form.description" class="form-control" rows="4" required></textarea>
-        </div>
+  <div class="mb-3">
+    <label class="form-label">Temps de réalisation (en jours)</label>
+    <input v-model="form.temps_realisation" type="number" class="form-control" />
+    <small class="text-danger" v-if="errors.temps_realisation">{{ errors.temps_realisation }}</small>
+  </div>
 
-        <div class="mb-3">
-          <label class="form-label">Temps de réalisation</label>
-          <input v-model="form.temps_realisation" type="text" class="form-control" placeholder="Ex : 10 jours" required />
-        </div>
+  <div class="mb-3">
+    <label class="form-label">Fichier joint (PDF, DOCX, DOC)</label>
+    <input type="file" class="form-control" accept=".pdf,.doc,.docx" @change="handleFile" />
+  </div>
 
-        <div class="mb-3">
-          <label class="form-label">Fichier joint (PDF, DOCX, DOC)</label>
-          <input type="file" class="form-control" accept=".pdf,.doc,.docx" @change="handleFile" />
-        </div>
+  <button :disabled="!formIsValid" type="submit" class="btn btn-orange w-100 mt-3">
+    ✅ Envoyer la proposition
+  </button>
+</form>
 
-        <button type="submit" class="btn btn-orange w-100 mt-3">✅ Envoyer la proposition</button>
-        <button
-  type="button"
-  class="btn btn-outline-primary w-100 mb-3"
-  @click="autofillWithGpt4"
->
-  ⚡ Remplir automatiquement avec l'IA
-</button>
-
-
-        <router-link to="/offreCl" class="btn btn-outline-secondary w-100 mt-3">
-          ⬅️ Retour à la liste
-        </router-link>
-      </form>
 
       <div v-if="message" class="alert alert-success mt-4">{{ message }}</div>
     </div>
@@ -47,7 +40,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted,watch  } from 'vue';
 import { useRoute } from 'vue-router';
 import api from '@/Http/api';
 import Navbar from '../Navbar.vue';
@@ -114,79 +107,29 @@ const submitForm = async () => {
   }
 };
 
-// ⚡ Auto-remplissage via IA
-const autofillWithGpt4 = async () => {
-  console.log("▶️ Début de la génération via GPT-4...");
+const errors = ref({
+  prixPropose: '',
+  description: '',
+  temps_realisation: ''
+});
 
-  try {
-    const idAppel = route.params.idAppel;
-    console.log("📌 ID de l’appel :", idAppel);
-
-    const res = await api.get(`/appels/${idAppel}`);
-    const appelData = res.data;
-    appel.value = appelData;
-    console.log("📥 Appel d’offre récupéré :", appelData);
-
-    // 💡 Prompt basé uniquement sur la description
-    const prompt = `
-Tu es un prestataire expérimenté.
-
-Voici la description d'un projet à traiter : 
-"${appelData.description}"
-
-Donne une proposition adaptée, incluant :
-1. Un prix proposé (en TND)
-2. Un temps estimé (ex : 10 jours)
-3. Une courte description de ta proposition
-Réponds STRICTEMENT en format JSON comme ceci , c est a dire propose ton propre suggestion  pour toutes les champos vous avez liberte totalle:
-{
-  "prix": 3000,
-  "temps": "12 jours",
-  "description": "Je propose une prestation complète incluant le développement, les tests et la documentation..."
-}
-`.trim();
-
-    console.log("✉️ Prompt envoyé :", prompt);
-
-    const response = await fetch("https://chatgpt-42.p.rapidapi.com/aitohuman", {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        "X-RapidAPI-Key": "83870a5b6fmshd9175a2f4a4f98fp12596djsnf63906983894", // 👈 ta clé API
-        "X-RapidAPI-Host": "chatgpt-42.p.rapidapi.com"
-      },
-      body: JSON.stringify({ text: prompt })
-    });
-
-    console.log("⏳ Attente de la réponse...");
-    const result = await response.json();
-    console.log("📨 Réponse GPT-4 brute :", result);
-
-    if (result?.result?.length > 0) {
-      try {
-        const rawJson = result.result[0];
-        console.log("📦 JSON reçu brut :", rawJson);
-
-        const data = JSON.parse(rawJson);
-        console.log("✅ JSON parsé :", data);
-
-        form.value.prixPropose = data.prix;
-        form.value.temps_realisation = data.temps;
-        form.value.description = data.description;
-      } catch (err) {
-        console.error("❌ Erreur de parsing JSON :", err);
-        alert("⚠️ Erreur de parsing JSON : " + result.result[0]);
-      }
-    } else {
-      console.warn("❌ Réponse vide ou invalide de GPT-4.");
-      alert("❌ Réponse vide ou invalide de GPT-4.");
-    }
-  } catch (error) {
-    console.error("❌ Erreur générale GPT-4 :", error);
-    alert("❌ Erreur lors de l’appel à GPT-4.");
-  }
+const validateForm = () => {
+  errors.value.prixPropose = form.value.prixPropose > 0 ? '' : 'Le prix doit être supérieur à 0';
+  errors.value.description = form.value.description.length >= 5 ? '' : 'La description doit faire au moins 5 caractères';
+  errors.value.temps_realisation = Number(form.value.temps_realisation) > 0 ? '' : 'Le temps de réalisation doit être un nombre > 0';
 };
 
+const formIsValid = computed(() => {
+  return (
+    form.value.prixPropose > 0 &&
+    form.value.description.length >= 5 &&
+    Number(form.value.temps_realisation) > 0
+  );
+});
+// Watch en temps réel
+watch(() => form.value.prixPropose, validateForm);
+watch(() => form.value.description, validateForm);
+watch(() => form.value.temps_realisation, validateForm);
 
 </script>
 

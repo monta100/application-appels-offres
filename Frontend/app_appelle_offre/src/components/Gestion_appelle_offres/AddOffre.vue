@@ -23,41 +23,72 @@
 
           <div class="modal-body">
             <div class="row g-3">
+
+              <!-- Titre -->
               <div class="col-md-6">
                 <label class="form-label">Titre</label>
-                <input v-model="form.titre" type="text" class="form-control" required />
+                <input v-model="form.titre" type="text" class="form-control" />
+                <div class="text-danger" v-if="form.titre && (form.titre.length < 3 || form.titre.length > 90)">
+                  Le titre doit contenir entre 3 et 90 caractères.
+                </div>
               </div>
+
+              <!-- Budget -->
               <div class="col-md-6">
                 <label class="form-label">Budget (TND)</label>
-                <input v-model="form.budget" type="number" class="form-control" required />
+                <input v-model.number="form.budget" type="number" class="form-control" />
+                <div class="text-danger" v-if="form.budget !== '' && form.budget <= 0">
+                  Le budget doit être supérieur à 0.
+                </div>
               </div>
+
+              <!-- Description -->
               <div class="col-md-12">
                 <label class="form-label">Description</label>
-                <textarea v-model="form.description" class="form-control" rows="3" required></textarea>
+                <textarea v-model="form.description" class="form-control" rows="3"></textarea>
+                <div class="text-danger" v-if="form.description && (form.description.length < 3)">
+                  La description doit contenir entre 3
+                </div>
               </div>
+
+              <!-- Date début -->
               <div class="col-md-6">
                 <label class="form-label">Date de début</label>
-                <input v-model="form.date_debut" type="date" class="form-control" required />
+                <input v-model="form.date_debut" type="date" class="form-control" />
+                <div class="text-danger" v-if="form.date_debut && !isDebutValid">
+                  La date de début doit être entre J+5 et dans les 12 mois à venir.
+                </div>
               </div>
+
+              <!-- Date fin -->
               <div class="col-md-6">
                 <label class="form-label">Date de fin</label>
-                <input v-model="form.date_fin" type="date" class="form-control" required />
+                <input v-model="form.date_fin" type="date" class="form-control" />
+                <div class="text-danger" v-if="form.date_fin && !isFinValid">
+                  La date de fin doit être après la date de début et avant l’année 2027.
+                </div>
               </div>
+
+              <!-- Domaine -->
               <div class="col-md-12">
                 <label class="form-label">Domaine</label>
-                <select v-model="form.idDomaine" class="form-select" required>
+                <select v-model="form.idDomaine" class="form-select">
                   <option disabled value="">-- Sélectionnez un domaine --</option>
                   <option v-for="domaine in domaines" :key="domaine.idDomaine" :value="domaine.idDomaine">
                     {{ domaine.nom }}
                   </option>
                 </select>
+                <div class="text-danger" v-if="form.idDomaine === ''">Le domaine est requis.</div>
               </div>
+
             </div>
           </div>
 
           <div class="modal-footer">
             <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
-            <button type="submit" class="btn btn-success">Ajouter</button>
+            <button type="submit" class="btn btn-success" :disabled="!isFormValid">
+              Ajouter
+            </button>
           </div>
         </form>
       </div>
@@ -66,14 +97,17 @@
 </template>
 
 
+
 <script setup>
-import { ref, onMounted, computed } from 'vue'
-import api from '@/Http/api';
+import { ref, computed, onMounted } from 'vue'
+import api from '@/Http/api'
 import { useStore } from 'vuex'
 
+// Store et utilisateur
 const store = useStore()
 const user = computed(() => store.state.auth.user)
 
+// Formulaire
 const form = ref({
   titre: '',
   description: '',
@@ -84,8 +118,60 @@ const form = ref({
   idUser: null
 })
 
+// Domaines (chargés dynamiquement)
 const domaines = ref([])
 
+onMounted(async () => {
+  try {
+    const res = await api.get('http://localhost:8000/api/domaines')
+    domaines.value = res.data
+  } catch (err) {
+    console.error('Erreur chargement domaines:', err)
+  }
+})
+
+// Fonctions de validation
+const isTitreValid = computed(() =>
+  form.value.titre.length >= 3 && form.value.titre.length <= 90
+)
+
+const isBudgetValid = computed(() => form.value.budget > 0)
+
+const isDescriptionValid = computed(() =>
+  form.value.description.length >= 3
+)
+
+const isDebutValid = computed(() => {
+  if (!form.value.date_debut) return false
+  const debut = new Date(form.value.date_debut)
+  const today = new Date()
+  const minDate = new Date(today)
+  minDate.setDate(today.getDate() + 5)
+  const maxDate = new Date(today)
+  maxDate.setMonth(today.getMonth() + 12)
+  return debut >= minDate && debut <= maxDate
+})
+
+const isFinValid = computed(() => {
+  if (!form.value.date_fin || !form.value.date_debut) return false
+  const fin = new Date(form.value.date_fin)
+  const debut = new Date(form.value.date_debut)
+  const maxFin = new Date('2027-01-01')
+  return fin > debut && fin < maxFin
+})
+
+const isDomaineValid = computed(() => form.value.idDomaine !== '')
+
+const isFormValid = computed(() =>
+  isTitreValid.value &&
+  isBudgetValid.value &&
+  isDescriptionValid.value &&
+  isDebutValid.value &&
+  isFinValid.value &&
+  isDomaineValid.value
+)
+
+// Soumission du formulaire
 const submitForm = async () => {
   try {
     form.value.idUser = user.value.id
@@ -97,15 +183,6 @@ const submitForm = async () => {
     console.error(err)
   }
 }
-
-onMounted(async () => {
-  try {
-    const res = await api.get('http://localhost:8000/api/domaines')
-    domaines.value = res.data
-  } catch (err) {
-    console.error('Erreur chargement domaines:', err)
-  }
-})
 </script>
 
 

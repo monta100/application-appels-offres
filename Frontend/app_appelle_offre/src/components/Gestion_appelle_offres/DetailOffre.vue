@@ -64,27 +64,22 @@
 
       <!-- Bouton Contact -->
       <div class="mt-4 d-flex gap-3 flex-wrap">
-        <a
-          class="btn btn-success"
-          :href="getOutlookLink(appel.user?.email, appel.titre)"
-          target="_blank"
-          rel="noopener noreferrer"
-          v-if="appel.user?.email"
-        >
-          📧 Contacter le propriétaire
-        </a>
+        
 
         <router-link to="/offreCl" class="btn btn-outline-secondary">
           ⬅️ Retour à la liste
         </router-link>
-
-      <router-link
+<router-link
   :to="`/soumettre/${appel.idAppel}`"
   class="btn btn-orange"
-  v-if="!hasSubmitted"
+  v-if="!hasSubmitted && timeRemaining > 0"
 >
   ✍️ Soumettre une proposition
 </router-link>
+
+<span class="text-danger fst-italic" v-else-if="timeRemaining === 0">
+  ⛔ Le délai de soumission est expiré. Vous ne pouvez plus participer.
+</span>
 
 <span class="text-muted fst-italic" v-else>
   ✅ Vous avez déjà soumis une proposition pour cet appel.

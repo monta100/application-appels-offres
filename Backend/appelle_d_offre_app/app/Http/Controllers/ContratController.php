@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\contrat;
-use Illuminate\Http\Request;
 use App\Models\Soumission;
+use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Storage;
+
 class ContratController extends Controller
 {
     public function index()
@@ -65,35 +67,36 @@ class ContratController extends Controller
 
 
 
-    public function genererContratPourSoumission($idSoumission)
+  public function genererContratComplet($idSoumission)
 {
-    $soumission = Soumission::with('appelOffre', 'user')->findOrFail($idSoumission);
+    $soumission = Soumission::with(['appelOffre', 'user'])->findOrFail($idSoumission);
 
     // Vérifier si un contrat existe déjà
     if ($soumission->contrat) {
         return response()->json(['message' => 'Un contrat a déjà été généré pour cette soumission.'], 409);
     }
 
-    // Création du contrat
-    $contrat = contrat::create([
+    // Générer le PDF
+    $pdf = Pdf::loadView('pdf.contrat', compact('soumission'));
+
+    $fileName = "contrat_{$soumission->idSoumission}_" . time() . ".pdf";
+    $filePath = "contrats/{$fileName}";
+
+    // Sauvegarder le fichier dans storage/app/public/contrats
+    Storage::disk('public')->put($filePath, $pdf->output());
+
+    // Créer le contrat avec le lien du fichier PDF
+    $contrat = Contrat::create([
         'idSoumission' => $soumission->idSoumission,
-        'date_creation' => Carbon::now(),
-        'fichier_pdf' => null // À générer plus tard automatiquement
+        'date_creation' => now(),
+        'fichier_pdf' => $filePath,
     ]);
 
     return response()->json([
         'message' => 'Contrat généré avec succès.',
-        'contrat' => $contrat
+        'contrat' => $contrat,
+        'fichier_pdf' => asset("storage/{$filePath}")
     ]);
 }
 
-
-public function genererPDF($idSoumission)
-{
-    $soumission = soumission::with(['user', 'appelOffre'])->findOrFail($idSoumission);
-
-    $pdf = Pdf::loadView('pdf.contrat', compact('soumission'));
-
-    return $pdf->download("contrat_{$soumission->idSoumission}.pdf");
-}
 }

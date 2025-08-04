@@ -11,7 +11,7 @@ class contrat extends Model
     protected $primaryKey = 'idContrat';
 
       protected $fillable = [
-        'fichierpdf',
+        'fichier_pdf',   
         'date_creation',
         'idSoumission',
     ];

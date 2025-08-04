@@ -137,6 +137,9 @@ Route::post('/soumissions/{id}/scoring', [SoumissionController::class, 'scoring'
 Route::middleware('auth:sanctum')->post('/chatbot/create-offre', [ChatbotController::class, 'generateAndCreateOffer']);
 Route::post('/generate-soumission', [ChatbotController::class, 'genererSoumission']);
 
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/contrats/generer/{idSoumission}', [ContratController::class, 'genererContratComplet']);
+});
 
 //routes pour chatboot
 // Génération de soumission
