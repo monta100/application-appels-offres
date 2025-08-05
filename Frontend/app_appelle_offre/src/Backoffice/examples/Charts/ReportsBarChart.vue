@@ -51,7 +51,11 @@
 </template>
 <script>
 import Chart from "chart.js/auto";
+import ChartDataLabels from "chartjs-plugin-datalabels";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
+
+// 📌 Enregistrer le plugin globalement
+Chart.register(ChartDataLabels);
 
 export default {
   name: "ReportsBarChart",
@@ -59,22 +63,10 @@ export default {
     FontAwesomeIcon,
   },
   props: {
-    id: {
-      type: String,
-      required: true,
-    },
-    color: {
-      type: String,
-      default: "dark",
-    },
-    title: {
-      type: String,
-      default: "",
-    },
-    description: {
-      type: String,
-      default: "",
-    },
+    id: { type: String, required: true },
+    color: { type: String, default: "dark" },
+    title: { type: String, default: "" },
+    description: { type: String, default: "" },
     chart: {
       type: Object,
       required: true,
@@ -87,18 +79,15 @@ export default {
     },
     items: {
       type: Array,
-      default: () => {
-        [];
-      },
+      default: () => [],
     },
   },
   mounted() {
-    var ctx = document.getElementById(this.id).getContext("2d");
+    const ctx = document.getElementById(this.id).getContext("2d");
 
+    // 🔄 Détruire ancien chart si existant
     let chartStatus = Chart.getChart(this.id);
-    if (chartStatus != undefined) {
-      chartStatus.destroy();
-    }
+    if (chartStatus) chartStatus.destroy();
 
     new Chart(ctx, {
       type: "bar",
@@ -111,9 +100,9 @@ export default {
             borderWidth: 0,
             borderRadius: 4,
             borderSkipped: false,
-            backgroundColor: "#fff",
+            backgroundColor: "#f97316", // ✅ Orange plus lisible
             data: this.chart.datasets.data,
-            maxBarThickness: 6,
+            maxBarThickness: 20,
           },
         ],
       },
@@ -121,8 +110,17 @@ export default {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
-          legend: {
-            display: false,
+          legend: { display: false },
+
+          // ✅ Affichage des valeurs sur les barres
+          datalabels: {
+            anchor: "end",
+            align: "top",
+            color: "#fff",
+            font: {
+              weight: "bold",
+              size: 12,
+            },
           },
         },
         interaction: {
@@ -131,35 +129,21 @@ export default {
         },
         scales: {
           y: {
-            grid: {
-              drawBorder: false,
-              display: false,
-              drawOnChartArea: false,
-              drawTicks: false,
-            },
+            suggestedMin: 0,
+            suggestedMax: 10,
+            beginAtZero: true,
+            grid: { drawBorder: false, display: false },
             ticks: {
-              suggestedMin: 0,
-              suggestedMax: 500,
-              beginAtZero: true,
-              padding: 15,
-              font: {
-                size: 14,
-                family: "Open Sans",
-                style: "normal",
-                lineHeight: 2,
-              },
+              padding: 10,
+              font: { size: 13 },
               color: "#fff",
             },
           },
           x: {
-            grid: {
-              drawBorder: false,
-              display: false,
-              drawOnChartArea: false,
-              drawTicks: false,
-            },
+            grid: { display: false },
             ticks: {
-              display: false,
+              font: { size: 13 },
+              color: "#fff",
             },
           },
         },

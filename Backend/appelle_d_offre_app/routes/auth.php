@@ -10,6 +10,7 @@ use App\Http\Controllers\ChatbotController;
 use App\Http\Controllers\ContratController;
 use App\Http\Controllers\DomainesController;
 use App\Http\Controllers\Auth\UserController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\SoumissionController;
 use App\Http\Controllers\Auth\MessageController;
 use App\Http\Controllers\Auth\ProfileController;
@@ -168,3 +169,12 @@ Route::get('/chatbot/appels-recents', [ChatbotController::class, 'appelsRecents'
 //route unifie pour toutes ces requettes 
 
 Route::post('/chatbot/unified', [ChatbotController::class, 'handleUnifiedChat']);
+
+
+
+
+//dashboard stat
+
+Route::middleware('auth:sanctum')->get('/dashboard-stats', [DashboardController::class, 'stats']);
+Route::middleware('auth:sanctum')->get('/dashboard-activites', [DashboardController::class, 'dashboardActivites']);
+Route::middleware('auth:sanctum')->get('/dashboard/soumissions-semaine', [DashboardController::class, 'soumissionsParSemaine']);

@@ -31,7 +31,11 @@ import {
   faFileSignature,
   faUsers,
   faHandPointer,
-  faCreditCard
+  faCreditCard,
+faChartLine,
+  faFileAlt,       // 📄 pour Appels d’offres
+
+
 } from "@fortawesome/free-solid-svg-icons";
 
 // Ajoute les icônes dans la librairie
@@ -43,7 +47,11 @@ library.add(
   faFileSignature,
   faUsers,
   faHandPointer,
-  faCreditCard
+  faCreditCard,
+faChartLine,
+  faFileAlt,       // 📄 pour Appels d’offres
+
+
 );
 
 // ⚙️ Créer instance Vue + plugins

@@ -10,8 +10,7 @@ class soumission extends Model
     use HasFactory;
 
         protected $primaryKey = 'idSoumission';
-    public $timestamps = false;
-
+  public $timestamps = true;
     protected $fillable = [
         'prixPropose',
         'description',
