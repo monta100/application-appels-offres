@@ -7,9 +7,16 @@
             class="text-center shadow icon icon-shape border-radius-md"
             :class="typeof icon === 'object' ? icon.background : ''"
           >
-            <i
+            <!-- ✅ Remplacement correct -->
+            <font-awesome-icon
+              v-if="typeof icon === 'object'"
+              :icon="icon.component"
               class="text-lg opacity-10"
-              :class="typeof icon === 'string' ? icon : icon.component"
+            />
+            <i
+              v-else
+              class="text-lg opacity-10"
+              :class="icon"
               aria-hidden="true"
             ></i>
           </div>
@@ -40,7 +47,7 @@
                 }}
 
                 {{
-                  percentage && percentage === "object"
+                  percentage && typeof percentage === "object"
                     ? `${percentage.value}`
                     : ""
                 }}
@@ -53,9 +60,15 @@
   </div>
 </template>
 
+
 <script>
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+
 export default {
   name: "MiniStatisticsCard",
+  components: {
+    FontAwesomeIcon
+  },
   props: {
     directionReverse: {
       type: Boolean,
@@ -64,43 +77,19 @@ export default {
     title: {
       type: [Object, String],
       default: null,
-      text: {
-        type: String,
-      },
-      color: {
-        type: String,
-      },
     },
     value: {
       type: [Object, String, Number],
       required: true,
-      text: {
-        type: [String, Number],
-      },
-      color: {
-        type: String,
-      },
     },
     percentage: {
       type: [Object, String],
-      value: {
-        type: String,
-      },
-      color: {
-        type: String,
-      },
       default: () => ({
         color: "text-success",
       }),
     },
     icon: {
       type: [String, Object],
-      component: {
-        type: String,
-      },
-      background: {
-        type: String,
-      },
       default: () => ({
         background: "bg-white",
       }),

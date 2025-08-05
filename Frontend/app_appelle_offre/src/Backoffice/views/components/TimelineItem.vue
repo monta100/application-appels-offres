@@ -1,8 +1,19 @@
 <template>
   <div class="mb-3 timeline-block" :class="darkMode">
     <span class="timeline-step" :class="darkMode ? 'bg-dark' : ''">
-      <i class="ni text-gradient" :class="`ni-${icon} text-${color}`"></i>
+      <!-- ✅ FontAwesome ou Nucleo -->
+      <font-awesome-icon
+        v-if="typeof icon === 'object'"
+        :icon="icon"
+        :class="`text-${color}`"
+      />
+      <i
+        v-else
+        class="ni text-gradient"
+        :class="`ni-${icon} text-${color}`"
+      ></i>
     </span>
+
     <div class="timeline-content">
       <h6
         class="mb-0 text-sm font-weight-bold"
@@ -27,16 +38,22 @@
     </div>
   </div>
 </template>
+
 <script>
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+
 export default {
   name: "TimelineItem",
+  components: {
+    FontAwesomeIcon
+  },
   props: {
     color: {
       type: String,
       default: "",
     },
     icon: {
-      type: String,
+      type: [String, Object],
       default: "",
     },
     title: {
