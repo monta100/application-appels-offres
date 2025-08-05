@@ -39,7 +39,7 @@
       </div>
     </div>
 
-    <div class="row mt-4">
+    <div class="row mt-1">
       <div class="col-lg-8">
       <div>
   <reports-bar-chart
@@ -99,7 +99,15 @@
         </timeline-list>
       </div>
     </div>
+<div class="row no-margin-top">
+  <div class="col-lg-6">
+<IndiceActivite v-if="indiceActivite !== null" :score="indiceActivite" />
   </div>
+</div>
+  </div>
+
+
+
 </template>
 
 <script>
@@ -108,6 +116,7 @@ import ReportsBarChart from '@/Backoffice/examples/Charts/ReportsBarChart.vue';
 import TimelineList from './components/TimelineList.vue';
 import TimelineItem from './components/TimelineItem.vue';
 import { computed } from 'vue';
+import IndiceActivite from './components/IndiceActivite.vue';
 import {
   faClipboardList,
   faUser,
@@ -126,7 +135,9 @@ export default {
     MiniStatisticsCard,
     ReportsBarChart,
     TimelineList,
-    TimelineItem
+    TimelineItem,
+    IndiceActivite,
+
   },
   data() {
     return {
@@ -148,6 +159,8 @@ export default {
       chartSoumissions: [0, 0, 0, 0, 0, 0],
       recentActivities: [],
       chartLabels: [],
+indiceActivite: null, // au lieu de 0
+
     };
   },
 
@@ -199,6 +212,15 @@ export default {
     } catch (error) {
       console.error('Erreur de chargement des activités :', error);
     }
+try {
+  const indiceRes = await api.get('/dashboard/indice-activite');
+  this.indiceActivite = Number(indiceRes.data.indice) || 0; // ✅ Correction ici
+} catch (error) {
+  console.error('Erreur indice activité :', error);
+  this.indiceActivite = 0;
+}
+
+
   },
   methods: {
     getIconForType(type) {
@@ -220,4 +242,17 @@ export default {
   }
 };
 </script>
+
+<style>
+/* Réduit l'espace au-dessus de la section IndiceActivite */
+.row.no-margin-top {
+  margin-top: -160px !important; /* ou -40px selon besoin */
+  padding-top: 0 !important;
+}
+.col-lg-4 {
+  margin-bottom: 0 !important;
+}
+
+
+</style>
 

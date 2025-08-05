@@ -95,18 +95,20 @@
       </nav>
     </div>
   </div>
+  <h4 class="mt-5 mb-3 text-primary text-center">Statistiques par rôle</h4>
+
+<top-users-stats/>
 </template>
 
 <script setup>
 import { onMounted, ref, computed } from 'vue';
 import api from '@/Http/api';
-
-const users = ref([]);
-const loading = ref(true);
+import TopUsersStats from './TopUsersStats.vue';
 const searchTerm = ref('');
 const currentPage = ref(1);
 const usersPerPage = 5;
-
+const users = ref([]);        
+const loading = ref(true);
 const toggleActivation = async (user) => {
   try {
     const response = await api.patch(`/users/${user.idUser }/toggle-active`);

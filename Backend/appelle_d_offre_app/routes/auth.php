@@ -178,3 +178,7 @@ Route::post('/chatbot/unified', [ChatbotController::class, 'handleUnifiedChat'])
 Route::middleware('auth:sanctum')->get('/dashboard-stats', [DashboardController::class, 'stats']);
 Route::middleware('auth:sanctum')->get('/dashboard-activites', [DashboardController::class, 'dashboardActivites']);
 Route::middleware('auth:sanctum')->get('/dashboard/soumissions-semaine', [DashboardController::class, 'soumissionsParSemaine']);
+Route::get('/dashboard/indice-activite', [DashboardController::class, 'getActiviteGlobale']);
+Route::get('/dashboard/appels-semaine', [DashboardController::class, 'appelsParSemaine']);
+Route::get('/dashboard/appels-par-domaine', [DashboardController::class, 'appelsParDomaine']);
+Route::get('/dashboard/top-users', [DashboardController::class, 'getTopUsers']);

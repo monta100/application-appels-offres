@@ -180,4 +180,30 @@ public function scoring($id)
         return response()->json(['message' => 'Erreur lors du scoring'], 500);
     }
 }
+
+
+public function getGlobalActivityIndex()
+{
+    $weekStart = \Carbon\Carbon::now()->startOfWeek();
+
+    // Comptage des entités
+    $soumissions = \App\Models\Soumission::where('created_at', '>=', $weekStart)->count();
+    $appels = \App\Models\appelle_offres::where('created_at', '>=', $weekStart)->count();
+    $contrats = \App\Models\Contrat::where('created_at', '>=', $weekStart)->count();
+    $users = \App\Models\User::where('created_at', '>=', $weekStart)->count();
+
+    // Pondération (tu peux ajuster)
+    $score = min(100, ($soumissions * 3 + $appels * 2 + $contrats * 4 + $users * 1));
+
+    return response()->json([
+        'index' => $score,
+        'details' => [
+            'soumissions' => $soumissions,
+            'appels' => $appels,
+            'contrats' => $contrats,
+            'users' => $users,
+        ]
+    ]);
+}
+
 }

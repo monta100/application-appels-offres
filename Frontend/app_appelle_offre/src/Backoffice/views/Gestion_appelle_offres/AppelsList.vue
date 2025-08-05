@@ -76,23 +76,45 @@
       </div>
     </div>
   </div>
+
+  <appels-bar-chart :data="appelsChartData" />
+  <appels-pie-chart :data="repartitionData" />
+
 </template>
 
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import api from '@/Http/api';
-
+import AppelsBarChart from './AppelsBarChart.vue';
+import AppelsPieChart from './AppelsPieChart.vue';
 const appels = ref([]);
 const domaines = ref([]);
+const appelsChartData = ref([0, 0, 0, 0, 0, 0]);
+
 const filters = ref({ domaine: '', date_debut_min: '', date_fin_max: '' });
 const page = ref(1);
 const perPage = 5;
 const sortAsc = ref(true);
+const repartitionData = ref([]);
 
 onMounted(async () => {
-  const res = await api.get('/appels');
-  appels.value = res.data;
-  domaines.value = [...new Set(res.data.map(a => a.domaine))].map(d => d);
+  try {
+    // Appels d'offres
+    const resAppels = await api.get('/appels');
+    appels.value = resAppels.data;
+    domaines.value = [...new Set(resAppels.data.map(a => a.domaine))].map(d => d);
+
+    // Données pour le graphique
+    const resChart = await api.get('/dashboard/appels-semaine');
+    appelsChartData.value = resChart.data.appels_par_semaine;
+
+    console.log('✅ données graphiques :', appelsChartData.value);
+  } catch (error) {
+    console.error('Erreur lors du chargement des données :', error);
+  }
+
+  const res = await api.get('/dashboard/appels-par-domaine');
+  repartitionData.value = res.data;
 });
 
 function resetFilters() {
