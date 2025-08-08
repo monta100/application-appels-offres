@@ -56,8 +56,21 @@ public function index()
     }
 
     $validated['idUser'] = auth()->id(); // On injecte le user connecté
-    appelle_offres::create($validated);
+$appel = appelle_offres::create($validated); // ✅ On stocke l'objet créé
+$prestataires = \App\Models\User::where('role', 'participant')->get();
 
+foreach ($prestataires as $prestataire) {
+    $notif = \App\Models\Notification::create([
+        'user_id' => $prestataire->idUser,
+        'title' => '🆕 Nouvel appel d\'offre',
+        'message' => 'Un nouvel appel d\'offre a été publié : ' . $appel->titre,
+        'type' => 'appel',
+    ]);
+
+    broadcast(new \App\Events\NotificationEvent($notif));
+}
+
+    
     return response()->json(['message' => 'Ajout réussi']);
 }
 

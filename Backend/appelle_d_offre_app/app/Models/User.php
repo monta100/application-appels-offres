@@ -76,5 +76,9 @@ public function messagesRecus()
 {
     return $this->hasMany(Message::class, 'receiver_id', 'idUser');
 }
+public function notifications()
+{
+    return $this->hasMany(Notification::class, 'user_id');
+}
 
 }

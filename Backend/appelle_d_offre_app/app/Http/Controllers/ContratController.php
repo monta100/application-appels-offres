@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Storage;
+use App\Models\Notification;
 
 class ContratController extends Controller
 {
@@ -92,11 +93,46 @@ class ContratController extends Controller
         'fichier_pdf' => $filePath,
     ]);
 
+
+
+
+
+
+
+Notification::create([
+    'user_id' => $soumission->user->idUser, // ou simplement $soumission->user_id si tu as accès direct
+    'title' => '📄 Contrat généré',
+    'message' => 'Un contrat a été généré pour votre soumission à l’appel d’offre : ' . $soumission->appelOffre->titre,
+    'type' => 'contrat',
+    'is_read' => false
+]);
+
+// (Optionnel) Diffuser en temps réel si tu utilises Laravel Echo + Pusher/WebSocket
+broadcast(new \App\Events\NotificationEvent(
+    \App\Models\Notification::latest()->first()
+));
+
+
+
     return response()->json([
         'message' => 'Contrat généré avec succès.',
         'contrat' => $contrat,
         'fichier_pdf' => asset("storage/{$filePath}")
     ]);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 }
 
 }

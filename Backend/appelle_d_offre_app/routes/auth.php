@@ -14,6 +14,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\SoumissionController;
 use App\Http\Controllers\Auth\MessageController;
 use App\Http\Controllers\Auth\ProfileController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\AppelleOffresController;
 use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\Auth\NewPasswordController;
@@ -182,3 +183,9 @@ Route::get('/dashboard/indice-activite', [DashboardController::class, 'getActivi
 Route::get('/dashboard/appels-semaine', [DashboardController::class, 'appelsParSemaine']);
 Route::get('/dashboard/appels-par-domaine', [DashboardController::class, 'appelsParDomaine']);
 Route::get('/dashboard/top-users', [DashboardController::class, 'getTopUsers']);
+//notification
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::post('/notifications/mark-as-read/{id}', [NotificationController::class, 'markAsRead']);
+});
+Route::middleware('auth:sanctum')->post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead']);

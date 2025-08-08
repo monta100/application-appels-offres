@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers\Auth;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Models\User;
 use App\Models\Message;
 use App\Events\MessageSent;
+use App\Models\Notification;
+use Illuminate\Http\Request;
+use App\Events\NotificationEvent;
+use App\Http\Controllers\Controller;
 
 class MessageController extends Controller
 {
@@ -24,31 +27,42 @@ class MessageController extends Controller
         return response()->json($messages);
     }
 
-    public function store(Request $request)
-    {
-        $request->validate([
-            'receiver_id' => 'required|exists:users,idUser',
-'content' => 'nullable|required_without:file|string',
-'file' => 'nullable|required_without:content|file|max:5120',
-        ]);
+   public function store(Request $request)
+{
+    $request->validate([
+        'receiver_id' => 'required|exists:users,idUser',
+        'content' => 'nullable|required_without:file|string',
+        'file' => 'nullable|required_without:content|file|max:5120',
+    ]);
 
-        $filePath = null;
+    $filePath = null;
 
-        if ($request->hasFile('file')) {
-            $filePath = $request->file('file')->store('uploads/messages', 'public'); // storage/app/public/uploads/messages
-        }
-
-        $message = Message::create([
-            'sender_id' => auth()->user()->idUser,
-            'receiver_id' => $request->receiver_id,
-            'content' => $request->content,
-            'file_path' => $filePath,
-        ]);
-
-        broadcast(new MessageSent($message))->toOthers();
-
-        return response()->json($message, 201);
+    if ($request->hasFile('file')) {
+        $filePath = $request->file('file')->store('uploads/messages', 'public'); // storage/app/public/uploads/messages
     }
+
+    $message = Message::create([
+        'sender_id' => auth()->user()->idUser,
+        'receiver_id' => $request->receiver_id,
+        'content' => $request->content,
+        'file_path' => $filePath,
+    ]);
+
+    // ✅ Notifier le destinataire
+    $receiver = User::find($request->receiver_id);
+    $notif = Notification::create([
+        'user_id' => $receiver->idUser,
+        'title' => '💬 Nouveau message',
+        'message' => 'Vous avez reçu un message de ' . auth()->user()->prenom . ' ' . auth()->user()->nom,
+        'type' => 'chat',
+    ]);
+
+    // ✅ Broadcast message et notification
+    broadcast(new MessageSent($message))->toOthers();
+    broadcast(new NotificationEvent($notif))->toOthers();
+
+    return response()->json($message, 201);
+}
 
     public function markAsSeen($id)
     {

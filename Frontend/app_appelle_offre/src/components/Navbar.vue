@@ -47,6 +47,10 @@
     <router-link to="/Assistant">Assistance</router-link>
   </li>
 
+            <li v-if="user">
+    <Notifications />
+  </li>
+          
               <!-- Auth buttons -->
               <li class="menu-btn" v-if="!user">
                 <router-link @click="goToSignin" class="login" to="/login">LOG IN</router-link>
@@ -103,7 +107,7 @@
 import { onMounted, computed } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
-
+import Notifications from './notif/Notifications.vue'
 const store = useStore()
 const router = useRouter()
 

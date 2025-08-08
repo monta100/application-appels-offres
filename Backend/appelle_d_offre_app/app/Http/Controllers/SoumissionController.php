@@ -3,10 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\soumission;
+use App\Models\Notification;
 use Illuminate\Http\Request;
+use App\Models\appelle_offres;
 use App\Mail\SoumissionChoisieMail;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Mail;
+use App\Events\NotificationEvent;
 
 class SoumissionController extends Controller
 {
@@ -55,7 +58,21 @@ $validated['fichier_joint'] = $request->file('fichier_joint')->store('fichiers_s
 
 
     $soumission = soumission::create($validated);
+// 🔔 NOTIFICATION : informer le représentant de l’appel d’offre
+$appel = appelle_offres::find($soumission->idAppel);
+$representant = $appel->user; // relation avec User
 
+$notif = Notification::create([
+    'user_id' => $representant->idUser,
+    'title' => 'Nouvelle soumission reçue',
+    'message' => 'Vous avez reçu une nouvelle soumission pour votre appel d\'offre : ' . $appel->titre,
+    'type' => 'soumission',
+]);
+
+broadcast(new NotificationEvent($notif)); // Optionnel si tu fais du temps réel
+
+
+    
     return response()->json($soumission, 201);
 }
 
@@ -142,13 +159,25 @@ public function soumissionsChoisies(Request $request)
 {
     $userId = $request->user()->idUser;
 
-    $soumissions = Soumission::with(['appelOffre.domaine', 'user', 'contrat'])
+    $soumissions = Soumission::with(['appelOffre.domaine', 'appelOffre', 'user', 'contrat'])
         ->whereHas('appelOffre', function ($query) use ($userId) {
             $query->where('idUser', $userId); // Seuls les appels d’offres du représentant connecté
         })
         ->where('choisie', true)
         ->latest()
         ->get();
+
+    // 🔔 Notifier chaque prestataire concerné
+    foreach ($soumissions as $soumission) {
+        $notif = \App\Models\Notification::create([
+            'user_id' => $soumission->user->idUser,
+            'title' => '🎉 Soumission acceptée',
+            'message' => 'Votre soumission pour l’appel d’offre "' . $soumission->appelOffre->titre . '" a été choisie.',
+            'type' => 'soumission',
+        ]);
+
+        broadcast(new \App\Events\NotificationEvent($notif))->toOthers();
+    }
 
     return response()->json($soumissions);
 }

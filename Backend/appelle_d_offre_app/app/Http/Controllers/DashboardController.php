@@ -65,7 +65,7 @@ public function dashboardActivites()
             ->get()
             ->map(function ($soumission) {
                 return [
-                    'title' => "Soumission par " . $soumission->user->nom,
+                    'title' => "Soumission par " . $soumission->user->nomSociete,
                     'datetime' => $soumission->created_at->format('d M H:i'),
                     'type' => 'soumission',
                 ];
