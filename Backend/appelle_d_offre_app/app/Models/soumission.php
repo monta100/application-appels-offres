@@ -19,6 +19,10 @@ class soumission extends Model
         'fichier_joint',
         'idUser',
         'idAppel',
+         // 🧠 Champs ajoutés pour le microservice d’anomalie
+    'score_ia_anomalie',
+    'verdict_ia_anomalie',
+    'explication_anomalie',
     ];
 
 

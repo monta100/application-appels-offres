@@ -235,4 +235,38 @@ public function getGlobalActivityIndex()
     ]);
 }
 
+
+public function detecterAnomalie($id)
+{
+    $soumission = soumission::with('appelOffre')->findOrFail($id);
+    $appel = $soumission->appelOffre;
+
+    try {
+        $response = Http::post('http://127.0.0.1:5000/api/anomalie', [
+            'description_appel' => $appel->description,
+            'description_soumission' => $soumission->description,
+            'prix_propose' => $soumission->prixPropose,
+            'budget_max' => $appel->budget,
+            'temps_realisation' => $soumission->temps_realisation,
+        ]);
+
+        if ($response->successful()) {
+            $data = $response->json();
+
+            $soumission->update([
+                'score_ia_anomalie' => $data['score_total'] ?? null,
+                'verdict_ia_anomalie' => $data['verdict'] ?? null,
+                'explication_anomalie' => $data['explication'] ?? null,
+            ]);
+
+            return response()->json([
+                'message' => 'Anomalie détectée avec succès.',
+                'data' => $data
+            ]);
+        }
+    } catch (\Exception $e) {
+        return response()->json(['error' => 'Erreur lors de l’analyse'], 500);
+    }
+}
+
 }

@@ -189,3 +189,4 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/notifications/mark-as-read/{id}', [NotificationController::class, 'markAsRead']);
 });
 Route::middleware('auth:sanctum')->post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead']);
+Route::post('/soumissions/{id}/detecter-anomalie', [SoumissionController::class, 'detecterAnomalie']);
