@@ -190,7 +190,7 @@ public function scoring($id)
     $soumission = soumission::findOrFail($id);
 
     // Appel vers Flask
-    $response = Http::post('http://127.0.0.1:5000/predict', [
+    $response = Http::post('http://127.0.0.1:5001/predict', [
         'prixPropose' => $soumission->prixPropose,
         'temps_realisation' => $soumission->temps_realisation,
         'description' => $soumission->description,
