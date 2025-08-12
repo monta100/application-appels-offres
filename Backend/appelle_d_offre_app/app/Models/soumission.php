@@ -18,6 +18,7 @@ class soumission extends Model
         'score_ia',
         'fichier_joint',
         'idUser',
+        'choisie',
         'idAppel',
          // 🧠 Champs ajoutés pour le microservice d’anomalie
     'score_ia_anomalie',
@@ -38,6 +39,10 @@ public function appelOffre()
 public function contrat()
 {
     return $this->hasOne(Contrat::class, 'idSoumission');
+}
+public function explanation()
+{
+    return $this->hasOne(\App\Models\SoumissionExplanation::class, 'soumission_id');
 }
 
 }

@@ -6,10 +6,12 @@ use App\Models\soumission;
 use App\Models\Notification;
 use Illuminate\Http\Request;
 use App\Models\appelle_offres;
+use App\Events\NotificationEvent;
 use App\Mail\SoumissionChoisieMail;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
-use App\Events\NotificationEvent;
+use App\Models\SoumissionExplanation;
+use Illuminate\Support\Facades\Log; // ✅ Import de Log
 
 class SoumissionController extends Controller
 {
@@ -143,17 +145,66 @@ public function getSoumissionsByAppel($idAppel)
 
 public function choisir($id)
 {
-    $soumission = Soumission::with('user')->findOrFail($id);
-    
-    // Mettre à jour la soumission choisie (ex : champ `choisie`)
-    $soumission->choisie = true;
-    $soumission->save();
+    // 1️⃣ Récupérer la soumission choisie avec son appel d'offre
+    $soumissionChoisie = Soumission::with(['user', 'appelOffre'])->findOrFail($id);
 
-    // Envoi de mail
-    Mail::to($soumission->user->email)->send(new SoumissionChoisieMail($soumission));
+    // 2️⃣ Marquer la soumission comme choisie
+    $soumissionChoisie->choisie = true;
+    $soumissionChoisie->save();
 
-    return response()->json(['message' => 'Soumission choisie']);
+    // 3️⃣ Récupérer toutes les soumissions de cet appel
+    $soumissions = Soumission::with('user', 'appelOffre')
+        ->where('idAppel', $soumissionChoisie->idAppel)
+        ->get();
+
+    // 4️⃣ Générer une explication IA pour chaque soumission
+    foreach ($soumissions as $soumission) {
+        // ✅ Si c'est la soumission choisie → acceptée, sinon → refusée
+        $verdict = ($soumission->idSoumission == $soumissionChoisie->idSoumission)
+            ? 'acceptée'
+            : 'refusée';
+
+        $payload = [
+            'verdict' => $verdict,
+            'soumission' => [
+                'prix' => $soumission->prixPropose,
+                'delai' => $soumission->temps_realisation,
+                'dossier_complet' => !empty($soumission->fichier_joint)
+            ],
+            'appel' => [
+                'budget_max' => $soumission->appelOffre->budget,
+                'delai_max' => null
+            ]
+        ];
+
+        try {
+            $response = Http::timeout(10)->post('http://127.0.0.1:5002/generate-explanation', $payload);
+
+            if ($response->ok()) {
+                $data = $response->json();
+
+                SoumissionExplanation::updateOrCreate(
+                    ['soumission_id' => $soumission->idSoumission],
+                    [
+                        'verdict' => $data['verdict'] ?? $verdict,
+                        'categories' => $data['categories'] ?? [],
+                        'public_phrase' => $data['public_phrase'] ?? ''
+                    ]
+                );
+            } else {
+            }
+        } catch (\Exception $e) {
+        }
+    }
+
+    // 5️⃣ Envoi du mail uniquement à la soumission choisie
+    Mail::to($soumissionChoisie->user->email)
+        ->send(new \App\Mail\SoumissionChoisieMail($soumissionChoisie));
+
+    return response()->json(['message' => 'Soumission choisie et explications générées']);
 }
+
+
 
 public function soumissionsChoisies(Request $request)
 {

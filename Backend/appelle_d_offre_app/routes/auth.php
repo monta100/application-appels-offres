@@ -20,6 +20,7 @@ use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Http\Controllers\Auth\RegisteredUserController;
+use App\Http\Controllers\SoumissionExplanationController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
@@ -190,3 +191,6 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 Route::middleware('auth:sanctum')->post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead']);
 Route::post('/soumissions/{id}/detecter-anomalie', [SoumissionController::class, 'detecterAnomalie']);
+
+
+Route::middleware('auth:sanctum')->get('/explications/appel/{appelId}', [SoumissionExplanationController::class, 'explicationsParAppel']);

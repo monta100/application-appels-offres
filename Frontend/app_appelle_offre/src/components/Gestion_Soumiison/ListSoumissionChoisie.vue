@@ -92,6 +92,9 @@
       </div>
     </div>
   </div>
+
+
+
     <Footer />
 
 </template>
@@ -101,6 +104,7 @@ import { ref, onMounted,computed } from 'vue';
 import axios from 'axios';
 import Footer from '../Footer.vue';
 import Navbar from '../Navbar.vue';
+
 const soumissions = ref([]);
 const alertMessage = ref('');
 const alertType = ref('info'); // info | success | warning | danger

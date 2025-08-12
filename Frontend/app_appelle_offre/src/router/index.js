@@ -13,6 +13,7 @@ import ListSoumissionChoisie from '@/components/Gestion_Soumiison/ListSoumission
 import Chat from '@/components/chat_enLigne/Chat.vue'
 import Assistant from '@/components/chatboot/Assistant.vue'
 import Profile from '@/components/Users/Profile.vue'
+import ResultatSoumission from '@/components/Gestion_Soumiison/ResultatSoumission.vue'
  const routes = [
   { path: '/', name: 'Home', component: Home },
   { path :'/appelles', name:'Appelle', component: list_appelle_offre,meta: { role: 'representant' }},
@@ -29,7 +30,13 @@ import Profile from '@/components/Users/Profile.vue'
 { path:'/Soumission_chosi' ,name :'ListSoumissionChoisie.vue',component :ListSoumissionChoisie,meta: { role: 'representant' }},
 { path:'/chat',name:'Chat',component :Chat},
 { path:'/Assistant', name:'Assistant',component :Assistant},
-{ path :'/Profil',name:'Profil',component:Profile}
+{ path :'/Profil',name:'Profil',component:Profile},
+{
+  path: '/ResultatSoumission/:idAppel',
+  name: 'ResultatSoumission',
+  component: ResultatSoumission,
+  props: route => ({ idAppel: Number(route.params.idAppel) })
+}
 ]
 
 
