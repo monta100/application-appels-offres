@@ -86,7 +86,7 @@
         <timeline-list
           class="h-100"
           title="Historique récent"
-          description="📈 <span class='font-weight-bold'>Activités</span> du mois"
+          description="📈 <span class='font-weight-bold'>Activités</span> du semaine"
         >
           <timeline-item
             v-for="(activity, index) in recentActivities"
@@ -246,7 +246,7 @@ try {
 <style>
 /* Réduit l'espace au-dessus de la section IndiceActivite */
 .row.no-margin-top {
-  margin-top: -160px !important; /* ou -40px selon besoin */
+  margin-top: -10px !important; /* ou -40px selon besoin */
   padding-top: 0 !important;
 }
 .col-lg-4 {

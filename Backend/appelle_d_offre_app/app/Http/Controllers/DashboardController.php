@@ -43,8 +43,6 @@ class DashboardController extends Controller
 public function dashboardActivites()
 {
     try {
-        $activites = [];
-
         // 🔹 Contrats signés cette semaine
         $contrats = Contrat::where('created_at', '>=', Carbon::now()->startOfWeek())
             ->orderBy('created_at', 'desc')
@@ -53,7 +51,7 @@ public function dashboardActivites()
             ->map(function ($contrat) {
                 return [
                     'title' => "Contrat signé avec " . $contrat->soumission->user->nom,
-                    'datetime' => $contrat->created_at->format('d M H:i'),
+                    'datetime' => $contrat->created_at->format('Y-m-d H:i:s'), // format triable
                     'type' => 'contrat',
                 ];
             });
@@ -66,7 +64,7 @@ public function dashboardActivites()
             ->map(function ($soumission) {
                 return [
                     'title' => "Soumission par " . $soumission->user->nomSociete,
-                    'datetime' => $soumission->created_at->format('d M H:i'),
+                    'datetime' => $soumission->created_at->format('Y-m-d H:i:s'),
                     'type' => 'soumission',
                 ];
             });
@@ -79,12 +77,18 @@ public function dashboardActivites()
             ->map(function ($appel) {
                 return [
                     'title' => "Nouvel appel d'offre publié",
-                    'datetime' => $appel->created_at->format('d M H:i'),
+                    'datetime' => $appel->created_at->format('Y-m-d H:i:s'),
                     'type' => 'appel',
                 ];
             });
 
-        $activites = $contrats->merge($soumissions)->merge($appels)->sortByDesc('datetime')->values();
+        // ✅ Fusion propre en Collection
+        $activites = collect()
+            ->merge($contrats)
+            ->merge($soumissions)
+            ->merge($appels)
+            ->sortByDesc('datetime')
+            ->values();
 
         return response()->json($activites);
     } catch (\Exception $e) {

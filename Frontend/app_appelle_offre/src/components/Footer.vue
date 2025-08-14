@@ -2,124 +2,111 @@
   <footer class="footer-area section-padding">
     <div class="footer-widget">
       <div class="container">
-        <div class="row">
-          <!-- Produits -->
-          <div class="col-xl-2 col-lg-3">
-            <div class="single-widget-home mb-5 mb-lg-0">
-              <h3 class="mb-4">Top Products</h3>
-              <ul>
-                <li class="mb-2"><a href="#">Managed Website</a></li>
-                <li class="mb-2"><a href="#">Managed Reputation</a></li>
-                <li class="mb-2"><a href="#">Power Tools</a></li>
-                <li><a href="#">Marketing Service</a></li>
-              </ul>
+        <div class="row align-items-start">
+          
+          <!-- Logo + Slogan -->
+          <div class="col-xl-4 col-lg-4 mb-4">
+            <h2 class="fw-bold text-white">Comport</h2>
+            <p class="slogan">Le portail intelligent des opportunités</p>
+            <p class="desc">
+              Plateforme professionnelle de gestion des appels d’offres, 
+              des soumissions et des contrats, avec IA intégrée et communication en temps réel.
+            </p>
+          </div>
+
+          <!-- Contact -->
+          <div class="col-xl-3 col-lg-3 mb-4">
+            <h5 class="text-white fw-bold mb-3">Contact</h5>
+            <ul class="footer-list">
+              <li>📍 Tunis, Tunisie</li>
+              <li>📧 <a href="mailto:contact@comport.com">contact@comport.com</a></li>
+              <li>📞 +216 12 345 678</li>
+            </ul>
+            <div class="social-icons mt-3">
+              <a href="#"><i class="fa fa-linkedin"></i></a>
+              <a href="#"><i class="fa fa-facebook"></i></a>
+              <a href="#"><i class="fa fa-twitter"></i></a>
             </div>
           </div>
 
-          <!-- Newsletter -->
-          <div class="col-xl-5 offset-xl-1 col-lg-6">
-            <div class="single-widget-home mb-5 mb-lg-0">
-              <h3 class="mb-4">Newsletter</h3>
-              <p class="mb-4">You can trust us. We only send promo offers.</p>
-              <form @submit.prevent>
-                <input type="email" placeholder="Your email here" required />
-                <button type="submit" class="template-btn">Subscribe Now</button>
-              </form>
+          <!-- Univers -->
+          <div class="col-xl-5 col-lg-5">
+            <h5 class="text-white fw-bold mb-3">Notre univers</h5>
+            <div class="feed">
+              <img
+                v-for="(img, index) in feedImages"
+                :key="index"
+                :src="img"
+                alt="feed image"
+              />
             </div>
           </div>
 
-          <!-- Instagram Feed -->
-          <div class="col-xl-3 offset-xl-1 col-lg-3">
-            <div class="single-widge-home">
-              <h3 class="mb-4">Instagram Feed</h3>
-              <div class="feed">
-                <img
-                  v-for="(img, index) in feedImages"
-                  :key="index"
-                  :src="img"
-                  alt="feed image"
-                />
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>
 
-    <!-- Copyright + Réseaux -->
-    <div class="footer-copyright">
-      <div class="container">
-        <div class="row">
-          <div class="col-lg-8 col-md-6">
-            <span>
-              &copy; {{ currentYear }} All rights reserved |
-              Template made with <i class="fa fa-heart-o"></i> by
-              <a href="https://colorlib.com" target="_blank">Colorlib</a>
-            </span>
-          </div>
-          <div class="col-lg-4 col-md-6">
-            <div class="social-icons">
-              <ul>
-                <li><a href="#"><i class="fa fa-facebook"></i></a></li>
-                <li><a href="#"><i class="fa fa-twitter"></i></a></li>
-                <li><a href="#"><i class="fa fa-dribbble"></i></a></li>
-                <li><a href="#"><i class="fa fa-behance"></i></a></li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </div>
+    <!-- Bas de page -->
+    <div class="footer-bottom text-center mt-4">
+      <span>&copy; {{ currentYear }} Comport — Tous droits réservés.</span>
     </div>
   </footer>
 </template>
 
 <script setup>
-// Année actuelle
 const currentYear = new Date().getFullYear()
-
-// Images statiques depuis public/assets/images
 const feedImages = Array.from({ length: 8 }, (_, i) =>
   `/assets/images/feed${i + 1}.jpg`
-
 )
-
-
-
-import { onMounted } from 'vue'
-
-onMounted(() => {
-  // Vérifie que jQuery est bien chargé
-  if (typeof window.$ === 'function') {
-    // Relance OwlCarousel
-    $('.employee-slider').owlCarousel({
-      loop: true,
-      margin: 20,
-      autoplay: true,
-      autoplayTimeout: 2000,
-      autoplayHoverPause: true,
-      nav: false,
-      dots: true,
-      responsiveClass: true,
-      responsive: {
-        0: { items: 1 },
-        576: { items: 1 },
-        768: { items: 1 },
-        992: { items: 2 }
-      }
-    })
-
-    // Active Nice Select si besoin
-    $('select').niceSelect()
-
-    // Active WOW.js
-    new WOW().init()
-  } else {
-    console.warn('jQuery non chargé. Les effets du template ne seront pas appliqués.')
-  }
-})
-
 </script>
 
 <style scoped>
-/* Tu peux ajouter ici des styles personnalisés si besoin */
+.footer-area {
+  background: #0a0a1a;
+  color: #bbb;
+  padding-top: 2rem;
+}
+.slogan {
+  font-size: 0.95rem;
+  color: #ff7900;
+  margin-bottom: 1rem;
+}
+.desc {
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+.footer-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.footer-list li {
+  margin-bottom: 0.5rem;
+}
+.feed {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 5px;
+}
+.feed img {
+  width: 100%;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+.social-icons a {
+  display: inline-block;
+  margin-right: 8px;
+  font-size: 1.2rem;
+  color: #fff;
+}
+.social-icons a:hover {
+  color: #ff7900;
+}
+.footer-bottom {
+  border-top: 1px solid #222;
+  padding: 1rem 0;
+  font-size: 0.85rem;
+  color: #888;
+}
 </style>
