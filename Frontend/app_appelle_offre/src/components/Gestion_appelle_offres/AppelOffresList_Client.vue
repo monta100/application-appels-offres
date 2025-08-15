@@ -39,6 +39,11 @@
       <input type="checkbox" value="cloture" v-model="selectedStatuses" />
       <span class="dot dot-danger"></span> Clôturé
     </label>
+      <label class="pill" :class="{active: selectedStatuses.includes('participee')}">
+    <input type="checkbox" value="participee" v-model="selectedStatuses" />
+    <!-- petit point neutre -->
+    <span class="dot" style="background:#6b7280"></span> Participée
+  </label>
     <button class="btn-link-reset" @click="clearStatuses">Tout désélectionner</button>
   </div>
 </div>
@@ -89,6 +94,15 @@
               >
                 🔍 Voir les détails
               </router-link>
+               <!-- 👇 Affiché uniquement si l'utilisateur a participé -->
+               <button
+                 v-if="isParticipated(appel)"
+                class="btn btn-orange-light"
+                @click="goToResults(appel.idAppel)"
+                title="Voir l'analyse IA de vos soumissions"
+                                                             >
+                                  📊 Consulter résultats
+                                               </button>
             </div>
           </div>
         </div>
@@ -118,11 +132,15 @@ const appels = ref([]);
 const search = ref('');
 
 // Cases cochées (multi-sélection). Vide = tous les statuts.
-const selectedStatuses = ref([]); // ['publiee','cloture'] par ex.
+const selectedStatuses = ref([]); // ['publiee','cloture','participee'] par ex.
+
+// ✅ NEW: ids des appels où l'utilisateur connecté a déposé une soumission
+const participatedIds = ref(new Set()); // ex: Set([3,7,12])
 
 const statusOptions = [
   { label: 'Publiée', value: 'publiee' },
   { label: 'Clôturé', value: 'cloture' },
+  // (Pas besoin d'ajouter "Participée" ici si tu ne l'utilises pas pour l'affichage des labels)
 ];
 
 const labelFromValue = (v) => statusOptions.find(o => o.value === v)?.label || v;
@@ -172,15 +190,34 @@ const fetchAppels = async () => {
   }));
 };
 
-// Filtrage local (titre + statuts cochés)
+// ✅ NEW: récupérer la liste des appels où le user connecté a participé
+const fetchParticipations = async () => {
+  try {
+    // Attend un payload type: { success: true, data: [ { idAppel: ... }, ... ] }
+    const res = await api.get('/me/appels-participes');
+    const list = res.data?.data || res.data || [];
+    participatedIds.value = new Set(list.map(a => a.idAppel));
+  } catch (e) {
+    console.error('fetchParticipations error:', e);
+    participatedIds.value = new Set();
+  }
+};
+
+// Filtrage local (titre + statuts cochés + participée)
 const filteredAppels = computed(() => {
   const q = normalize(search.value);
-  const wanted = selectedStatuses.value.map(normalizeStatut); // tableau des statuts cochés normalisés
+
+  // On sépare le filtre "participee" des statuts
+  const wantsParticipated = selectedStatuses.value.includes('participee');
+  const wanted = selectedStatuses.value
+    .filter(v => v !== 'participee')
+    .map(normalizeStatut); // tableau des statuts cochés normalisés
 
   return appels.value.filter((a) => {
     const inTitle = normalize(a.titre).includes(q);
     const okStatut = wanted.length === 0 ? true : wanted.includes(a.statutEffectif);
-    return inTitle && okStatut;
+    const okParticipation = wantsParticipated ? participatedIds.value.has(a.idAppel) : true;
+    return inTitle && okStatut && okParticipation;
   });
 });
 
@@ -195,8 +232,7 @@ const clearStatuses = () => {
 
 // Auth + data
 onMounted(async () => {
-  await fetchAppels();
-
+  // ⚠️ Auth d'abord (sinon /me/appels-participes échoue)
   const token = localStorage.getItem('token');
   if (!user.value && token) {
     try {
@@ -211,8 +247,34 @@ onMounted(async () => {
     window.location.assign('/backoffice.html#/sign-in');
     return;
   }
+
+  // ✅ Ensuite participations (pour que le filtre "Participée" marche dès le 1er rendu)
+  await fetchParticipations();
+
+  // Puis les appels (inchangé)
+  await fetchAppels();
 });
+
+
+
+
+// ✅ Détecter si l'utilisateur a participé à cet appel
+const isParticipated = (appel) => {
+  // Cas 1: backend renvoie déjà appel.participe (withExists)
+  if (typeof appel.participe !== 'undefined') return !!appel.participe;
+  // Cas 2: front maintient participatedIds (Set des idAppel)
+  if (typeof participatedIds !== 'undefined' && participatedIds.value instanceof Set) {
+    return participatedIds.value.has(appel.idAppel);
+  }
+  return false;
+};
+
+// ✅ Aller vers la page des résultats
+const goToResults = (idAppel) => {
+  router.push({ name: 'ResultatSoumission', params: { idAppel } });
+};
 </script>
+
 
 <style scoped>
 .card-appel {

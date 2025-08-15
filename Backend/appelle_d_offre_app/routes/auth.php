@@ -195,3 +195,8 @@ Route::post('/appels/{id}/upload', [AppelleOffresController::class, 'updateFichi
 
 
 Route::middleware('auth:sanctum')->get('/explications/appel/{appelId}', [SoumissionExplanationController::class, 'explicationsParAppel']);
+
+Route::middleware('auth:sanctum')->get(
+    '/me/appels-participes',
+    [AppelleOffresController::class, 'appelsParticipesPourMoi']
+);

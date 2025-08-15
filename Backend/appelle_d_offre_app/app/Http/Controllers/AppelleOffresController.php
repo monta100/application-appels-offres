@@ -169,5 +169,22 @@ public function updateFichier(Request $request, $id)
     ]);
 }
 
+ public function appelsParticipesPourMoi(Request $request)
+    {
+        $userId = $request->user()->idUser;
 
+        $appels = appelle_offres::with(['domaine', 'user']) // relations utiles pour l’UI
+            ->whereHas('soumissions', fn($q) => $q->where('idUser', $userId))
+            ->withCount([
+                // nb de soumissions de CE user sur chaque appel (pratique pour un badge)
+                'soumissions as nb_soumissions_par_user' => fn($q) => $q->where('idUser', $userId)
+            ])
+            ->orderByDesc('date_publication')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $appels,
+        ]);
+    }
 }

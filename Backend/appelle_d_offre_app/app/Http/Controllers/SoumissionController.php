@@ -376,4 +376,25 @@ public function detecterAnomalie($id)
     }
 }
 
+  public function appelsOuUserAParticipe(Request $request)
+    {
+        $userId = $request->user()->idUser;
+
+        // Charger les soumissions de l'utilisateur avec les détails des appels
+        $soumissions = Soumission::with([
+            'appelOffre.domaine',
+            'appelOffre.user' // propriétaire de l'appel
+        ])
+        ->where('idUser', $userId)
+        ->get()
+        ->pluck('appelOffre') // on récupère uniquement les appels
+        ->unique('idAppel') // éviter les doublons si plusieurs soumissions sur le même appel
+        ->values();
+
+        return response()->json([
+            'success' => true,
+            'data' => $soumissions
+        ]);
+    }
+
 }
