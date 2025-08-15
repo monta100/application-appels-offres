@@ -191,6 +191,7 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 Route::middleware('auth:sanctum')->post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead']);
 Route::post('/soumissions/{id}/detecter-anomalie', [SoumissionController::class, 'detecterAnomalie']);
+Route::post('/appels/{id}/upload', [AppelleOffresController::class, 'updateFichier']);
 
 
 Route::middleware('auth:sanctum')->get('/explications/appel/{appelId}', [SoumissionExplanationController::class, 'explicationsParAppel']);

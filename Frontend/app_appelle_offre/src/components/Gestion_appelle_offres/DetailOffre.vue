@@ -42,6 +42,25 @@
               <i class="fas fa-envelope me-2 text-orange"></i>
               <strong>Email :</strong> {{ appel.user.email }}
             </li>
+            <li class="mb-2" v-if="appel.fichier_joint">
+  <i class="fas fa-paperclip me-2 text-orange"></i>
+  <strong>Fichier joint :</strong>
+<a 
+  href="#"
+  @click.prevent="modalRef.openModal(
+    `http://localhost:8000/storage/${appel.fichier_joint}`,
+    appel.fichier_joint.split('/').pop(),
+    '120 Ko', // ou récupéré depuis backend
+    'application/pdf',
+    appel.created_at
+  )"
+  class="text-decoration-underline text-primary"
+>
+  📄 Voir le document
+</a>
+
+</li>
+
           </ul>
         </div>
         <div class="col-md-4">
@@ -94,6 +113,8 @@
       <p class="mt-3">Chargement de l'offre...</p>
     </div>
   </div>
+  <ModalFichier ref="modalRef" />
+
   <Footer />
 </template>
 
@@ -103,10 +124,11 @@ import { useRoute } from 'vue-router';
 import api from '@/Http/api';
 import Footer from '../Footer.vue';
 import Navbar from '../Navbar.vue';
-
+import ModalFichier from './ModalFichier.vue';
 const route = useRoute();
 const appel = ref(null);
 const hasSubmitted = ref(false);
+const modalRef = ref(null);
 
 
 onMounted(async () => {

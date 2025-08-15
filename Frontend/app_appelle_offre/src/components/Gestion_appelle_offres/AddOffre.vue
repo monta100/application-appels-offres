@@ -81,6 +81,18 @@
                 <div class="text-danger" v-if="form.idDomaine === ''">Le domaine est requis.</div>
               </div>
 
+
+<!-- Fichier joint -->
+<div class="col-md-12">
+  <label class="form-label">Fichier joint (optionnel)</label>
+<input 
+  type="file" 
+  class="form-control"
+@change="e => form.fichier_joint = e.target.files[0]"
+/>
+</div>
+
+
             </div>
           </div>
 
@@ -115,7 +127,9 @@ const form = ref({
   date_fin: '',
   budget: '',
   idDomaine: '',
-  idUser: null
+  idUser: null,
+  fichier_joint: null // 🆕 fichier
+
 })
 
 // Domaines (chargés dynamiquement)
@@ -171,11 +185,19 @@ const isFormValid = computed(() =>
   isDomaineValid.value
 )
 
-// Soumission du formulaire
 const submitForm = async () => {
   try {
     form.value.idUser = user.value.id
-    await api.post('http://localhost:8000/api/appels', form.value)
+
+    const formData = new FormData()
+    for (const key in form.value) {
+      formData.append(key, form.value[key])
+    }
+
+    await api.post('http://localhost:8000/api/appels', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+
     alert('✅ Appel d’offre ajouté avec succès')
     window.location.reload()
   } catch (err) {
@@ -183,6 +205,7 @@ const submitForm = async () => {
     console.error(err)
   }
 }
+
 </script>
 
 

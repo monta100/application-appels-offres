@@ -22,6 +22,7 @@ class appelle_offres extends Model
         'date_publication',
         'idUser',
         'idDomaine',
+        'fichier_joint'
 
 
     ];

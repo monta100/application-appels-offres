@@ -2,8 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\appelle_offres;
+use Storage;
 use Illuminate\Http\Request;
+use App\Models\appelle_offres;
 use Illuminate\Support\Facades\Auth;
 
 class AppelleOffresController extends Controller
@@ -52,7 +53,7 @@ public function index()
      
 
     if ($request->hasFile('fichier_joint')) {
-        $validated['fichier_joint'] = $request->file('fichier_joint')->store('fichiers_appels');
+$validated['fichier_joint'] = $request->file('fichier_joint')->store('fichiers_appels', 'public');
     }
 
     $validated['idUser'] = auth()->id(); // On injecte le user connecté
@@ -114,7 +115,7 @@ foreach ($prestataires as $prestataire) {
     ]);
 
     if ($request->hasFile('fichier_joint')) {
-        $validated['fichier_joint'] = $request->file('fichier_joint')->store('fichiers_appels');
+$validated['fichier_joint'] = $request->file('fichier_joint')->store('fichiers_appels', 'public');
     }
 
     $offre->update($validated);
@@ -140,6 +141,32 @@ public function userAppels()
     return appelle_offres::with('domaine')
         ->where('idUser', auth()->id())
         ->get();
+}
+public function updateFichier(Request $request, $id)
+{
+    $appel = appelle_offres::findOrFail($id);
+
+    // Validation
+    $request->validate([
+        'fichier_joint' => 'required|file|mimes:pdf,doc,docx|max:2048'
+    ]);
+
+    // Suppression de l'ancien fichier si nécessaire
+    if ($appel->fichier_joint) {
+        Storage::delete($appel->fichier_joint);
+    }
+
+    // Stockage du nouveau fichier
+    $path =$request->file('fichier_joint')->store('fichiers_appels', 'public');
+    // Mise à jour en base
+    $appel->update([
+        'fichier_joint' => $path
+    ]);
+
+    return response()->json([
+        'message' => '📂 Fichier mis à jour avec succès',
+        'fichier_joint' => $path
+    ]);
 }
 
 

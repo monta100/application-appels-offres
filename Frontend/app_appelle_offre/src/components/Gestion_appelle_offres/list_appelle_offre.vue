@@ -50,6 +50,7 @@
             <th>Date Début</th>
             <th>Date Fin</th>
             <th>Domaine</th>
+            <th>Fichier</th>
             <th>Création</th>
             <th>Statut</th>
             <th>Actions</th>
@@ -113,6 +114,34 @@
     <span class="editable">{{ appel.domaine?.nom || '—' }}</span>
   </template>
 </td>
+
+
+
+<td @dblclick="editingField = { id: appel.idAppelleOffre, field: 'fichier_joint' }">
+  <template v-if="editingField?.id === appel.idAppelleOffre && editingField?.field === 'fichier_joint'">
+    <input
+      type="file"
+      class="form-control form-control-sm"
+      @change="e => updateFile(appel, e)"
+      @blur="editingField = null"
+    />
+  </template>
+  <template v-else>
+    <template v-if="appel.fichier_joint">
+      <a
+        :href="`http://localhost:8000/storage/${appel.fichier_joint}`"
+        target="_blank"
+        class="btn btn-sm btn-outline-primary"
+      >
+        📂 Voir
+      </a>
+    </template>
+    <template v-else>
+      —
+    </template>
+  </template>
+</td>
+
 
 
             <td>{{ formatDate(appel.created_at) || '---' }}</td>
@@ -344,6 +373,29 @@ const deleteAppel = async (id) => {
     console.error("Erreur de suppression :", err);
   }
 };
+
+
+
+const updateFile = async (appel, event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  try {
+    const formData = new FormData();
+    formData.append("fichier_joint", file);
+
+    await api.post(`/appels/${appel.idAppel}/upload`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+
+    // Recharge les données
+    await fetchAppelsOffres();
+    editingField.value = null;
+  } catch (err) {
+    console.error("Erreur upload fichier :", err);
+  }
+};
+
 
 
 </script>
