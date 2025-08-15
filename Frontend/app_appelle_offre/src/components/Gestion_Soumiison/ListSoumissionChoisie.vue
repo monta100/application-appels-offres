@@ -3,7 +3,7 @@
 
   <div class="container my-5">
     <h2 class="text-center mb-4 text-orange fw-bold">
-      📝 Mes Soumissions Choisies
+      📝 Les Soumissions Choisies
     </h2>
 <div class="d-flex flex-wrap gap-3 mb-4 align-items-center">
   <input

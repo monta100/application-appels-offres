@@ -55,9 +55,8 @@ beforeUnmount() {
           password_confirmation: this.password_confirmation,
         });
         alert("✅ Mot de passe mis à jour !");
-        this.$router.push({ name: 'SignIn' });
+this.$router.replace({ name: 'Home' });
       } catch (err) {
-        alert(err.response?.data?.message || "❌ Erreur lors de la réinitialisation.");
       }
     }
   }
