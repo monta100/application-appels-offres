@@ -37,6 +37,13 @@
     <h2 class="mb-4 fw-bold text-orange">📋 Soumissions pour : {{ appelTitre }}</h2>
 
     <div v-if="soumissions.length > 0">
+      <div class="d-flex align-items-center gap-2 mb-3">
+  <button class="btn-best" @click="bestMode = !bestMode">
+    ⭐ Meilleure offre
+    <span class="small ms-1 text-muted" v-if="bestMode">(Top 3 en premier)</span>
+  </button>
+</div>
+
       <div class="table-responsive shadow rounded">
  <table class="table table-bordered align-middle mb-0">
   <thead class="table-light text-center">
@@ -52,68 +59,95 @@
       <th><i class="fas fa-check-circle"></i> Choix</th>
     </tr>
   </thead>
-  <tbody>
-    <tr v-for="(s, index) in soumissions" :key="s.idSoumission">
-      <td class="text-center fw-semibold">{{ index + 1 }}</td>
-      <td>{{ s.user?.nom || '—' }}</td>
-      <td>{{ s.prixPropose }} TND</td>
-      <td>{{ s.temps_realisation }} j</td>
-      <td>{{ s.description }}</td>
-      <td class="text-center">
-        <a
-          v-if="s.fichier_joint"
-          :href="`http://localhost:8000/storage/${s.fichier_joint}`"
-          target="_blank"
-          class="btn btn-sm btn-orange"
-        >
-          📎 Voir
-        </a>
-      </td>
-      <td class="text-center">
-        <div v-if="s.score_ia">
-          <span class="badge bg-success">{{ s.score_ia.toFixed(1) }} / 100</span>
-        </div>
-        <div v-else>
-          <button
-            class="btn btn-warning btn-sm"
-            @click="evaluerSoumission(s)"
-          >
-            🎯 Évaluer
-          </button>
-        </div>
-      </td>
-   <td class="text-center">
-  <div v-if="s.verdict_ia_anomalie">
-    <span
-      class="badge text-white"
-      :class="s.verdict_ia_anomalie === 'Soumission suspecte' ? 'bg-danger' : 'bg-success'"
-    >
-      {{ s.verdict_ia_anomalie }}
-    </span>
-    <br />
-    <button class="btn btn-link p-0 mt-1" @click="showDetails(s)">
-      🔍 Détails
-    </button>
-  </div>
-  <div v-else>
-    <button class="btn btn-outline-dark btn-sm" @click="detecterAnomalie(s)">
-      🧠 Vérifier
-    </button>
-  </div>
-</td>
+  <tbody v-if="!bestMode">
+  <tr v-for="(s, index) in soumissions" :key="s.idSoumission">
+    <td class="text-center fw-semibold">{{ index + 1 }}</td>
+    <td>{{ s.user?.nom || '—' }}</td>
+    <td>{{ s.prixPropose }} TND</td>
+    <td>{{ s.temps_realisation }} j</td>
+    <td>{{ s.description }}</td>
+    <td class="text-center">
+      <a v-if="s.fichier_joint" :href="`http://localhost:8000/storage/${s.fichier_joint}`" target="_blank" class="btn btn-sm btn-orange">📎 Voir</a>
+    </td>
+    <td class="text-center">
+      <div v-if="s.score_ia"><span class="badge bg-success">{{ s.score_ia.toFixed(1) }} / 100</span></div>
+      <div v-else><button class="btn btn-warning btn-sm" @click="evaluerSoumission(s)">🎯 Évaluer</button></div>
+    </td>
+    <td class="text-center">
+      <div v-if="s.verdict_ia_anomalie">
+        <span class="badge text-white" :class="s.verdict_ia_anomalie === 'Soumission suspecte' ? 'bg-danger' : 'bg-success'">{{ s.verdict_ia_anomalie }}</span><br>
+        <button class="btn btn-link p-0 mt-1" @click="showDetails(s)">🔍 Détails</button>
+      </div>
+      <div v-else><button class="btn btn-outline-dark btn-sm" @click="detecterAnomalie(s)">🧠 Vérifier</button></div>
+    </td>
+    <td class="text-center">
+      <button class="btn btn-success btn-sm" @click="choisirSoumission(s.idSoumission)" :disabled="soumissionChoisie !== null">✅ Choisir</button>
+    </td>
+  </tr>
+</tbody>
 
+<tbody v-else>
+  <!-- TOP 3 en premier, mis en avant -->
+  <tr v-for="(s, index) in top3" :key="'top-'+s.idSoumission" class="row-top">
+    <td class="text-center fw-semibold">
+      {{ index + 1 }}
+      <span class="badge badge-rank">TOP</span>
+    </td>
+    <td>{{ s.user?.nom || '—' }}</td>
+    <td>{{ s.prixPropose }} TND</td>
+    <td>{{ s.temps_realisation }} j</td>
+    <td>{{ s.description }}</td>
+    <td class="text-center">
+      <a v-if="s.fichier_joint" :href="`http://localhost:8000/storage/${s.fichier_joint}`" target="_blank" class="btn btn-sm btn-orange">📎 Voir</a>
+    </td>
+    <td class="text-center">
+      <span v-if="s.score_ia" class="badge bg-success">{{ s.score_ia.toFixed(1) }} / 100</span>
+      <button v-else class="btn btn-warning btn-sm" @click="evaluerSoumission(s)">🎯 Évaluer</button>
+    </td>
+    <td class="text-center">
+      <div v-if="s.verdict_ia_anomalie">
+        <span class="badge text-white" :class="s.verdict_ia_anomalie === 'Soumission suspecte' ? 'bg-danger' : 'bg-success'">{{ s.verdict_ia_anomalie }}</span><br>
+        <button class="btn btn-link p-0 mt-1" @click="showDetails(s)">🔍 Détails</button>
+      </div>
+      <div v-else><button class="btn btn-outline-dark btn-sm" @click="detecterAnomalie(s)">🧠 Vérifier</button></div>
+    </td>
+    <td class="text-center">
+      <button class="btn btn-success btn-sm" @click="choisirSoumission(s.idSoumission)" :disabled="soumissionChoisie !== null">✅ Choisir</button>
+    </td>
+  </tr>
 
-      <td class="text-center">
-        <button
-          class="btn btn-success btn-sm"
-          @click="choisirSoumission(s.idSoumission)"
-          :disabled="soumissionChoisie !== null"
-        >
-          ✅ Choisir
-        </button>
-      </td>
-    </tr>
-  </tbody>
+  <!-- séparateur visuel -->
+  <tr v-if="others.length" class="sep-row">
+    <td colspan="9">Autres soumissions</td>
+  </tr>
+
+  <!-- Le reste ensuite, ordre normal -->
+  <tr v-for="(s, index) in others" :key="'rest-'+s.idSoumission">
+    <td class="text-center fw-semibold">{{ top3.length + index + 1 }}</td>
+    <td>{{ s.user?.nom || '—' }}</td>
+    <td>{{ s.prixPropose }} TND</td>
+    <td>{{ s.temps_realisation }} j</td>
+    <td>{{ s.description }}</td>
+    <td class="text-center">
+      <a v-if="s.fichier_joint" :href="`http://localhost:8000/storage/${s.fichier_joint}`" target="_blank" class="btn btn-sm btn-orange">📎 Voir</a>
+    </td>
+    <td class="text-center">
+      <span v-if="s.score_ia" class="badge bg-success">{{ s.score_ia.toFixed(1) }} / 100</span>
+      <button v-else class="btn btn-warning btn-sm" @click="evaluerSoumission(s)">🎯 Évaluer</button>
+    </td>
+    <td class="text-center">
+      <div v-if="s.verdict_ia_anomalie">
+        <span class="badge text-white" :class="s.verdict_ia_anomalie === 'Soumission suspecte' ? 'bg-danger' : 'bg-success'">{{ s.verdict_ia_anomalie }}</span><br>
+        <button class="btn btn-link p-0 mt-1" @click="showDetails(s)">🔍 Détails</button>
+      </div>
+      <div v-else><button class="btn btn-outline-dark btn-sm" @click="detecterAnomalie(s)">🧠 Vérifier</button></div>
+    </td>
+    <td class="text-center">
+      <button class="btn btn-success btn-sm" @click="choisirSoumission(s.idSoumission)" :disabled="soumissionChoisie !== null">✅ Choisir</button>
+    </td>
+  </tr>
+</tbody>
+
 </table>
 
       </div>
@@ -153,7 +187,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import api from '@/Http/api';
 import Navbar from '../Navbar.vue';
@@ -164,6 +198,23 @@ const soumissions = ref([]);
 const appelTitre = ref('');
 const soumissionChoisie = ref(null); // pour empêcher plusieurs choix
 const showIAHelp = ref(true); // ou false par défaut
+const bestMode = ref(false); // bouton unique ON/OFF
+
+const hasScore = (s) => typeof s?.score_ia === 'number' && !isNaN(s.score_ia);
+
+
+
+// Tri décroissant (ne touche pas l’original)
+const sortedByScore = computed(() => {
+  return [...soumissions.value].filter(hasScore).sort((a, b) => b.score_ia - a.score_ia);
+});
+
+
+const top3 = computed(() => sortedByScore.value.slice(0, 3));
+
+const topIds = computed(() => new Set(top3.value.map(s => s.idSoumission)));
+
+const others = computed(() => soumissions.value.filter(s => !topIds.value.has(s.idSoumission)));
 
 onMounted(async () => {
   const idAppel = route.params.idAppel;
@@ -188,15 +239,15 @@ const choisirSoumission = async (idSoumission) => {
 };
 
 
-
 const evaluerSoumission = async (soumission) => {
   try {
     const response = await api.post(`/soumissions/${soumission.idSoumission}/scoring`);
 
-    // Mettre à jour localement le score
-    soumission.score_ia = response.data.score_ia;
+    soumission.score_ia = response.data.result?.score_ia ?? 0;
+    console.log('Score IA mis à jour :', soumission.score_ia);
 
-    console.log('✅ Score IA mis à jour :', response.data.score_ia);
+    // Force la réactivité Vue
+    soumissions.value = [...soumissions.value];
   } catch (err) {
     console.error('❌ Erreur lors de l’évaluation IA :', err.response?.data || err.message);
     alert('Erreur lors de l’évaluation IA.');
@@ -268,5 +319,41 @@ function showDetails(s) {
   border-radius: 10px;
 }
 
+.btn-best{
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  color: #374151;
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-weight: 700;
+  font-size: 14px;
+  transition: background .2s, color .2s, border-color .2s, transform .05s, box-shadow .2s;
+}
+.btn-best:hover{
+  border-color: #ff6600;
+  color: #ff6600;
+  box-shadow: 0 6px 16px rgba(255, 102, 0, .12);
+  transform: translateY(-1px);
+}
+
+.row-top{
+  background: #fff7f0 !important;           /* léger fond orange clair */
+}
+.badge-rank{
+  background: #ff6600;
+  color: #fff;
+  font-size: 10px;
+  border-radius: 999px;
+  padding: 2px 6px;
+  margin-left: 6px;
+}
+
+.sep-row td{
+  background: #f3f4f6;
+  color: #374151;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+}
 
 </style>

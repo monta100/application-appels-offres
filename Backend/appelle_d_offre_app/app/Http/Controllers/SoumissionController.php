@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Carbon\Carbon;
 use App\Models\soumission;
 use App\Models\Notification;
 use Illuminate\Http\Request;
@@ -11,6 +12,7 @@ use App\Mail\SoumissionChoisieMail;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use App\Models\SoumissionExplanation;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Log; // ✅ Import de Log
 
 class SoumissionController extends Controller
@@ -238,29 +240,83 @@ public function soumissionsChoisies(Request $request)
 
 public function scoring($id)
 {
-    $soumission = soumission::findOrFail($id);
+    // Récupération de la soumission + appel d’offre (titre/desc/budget/dates)
+    $soumission = \App\Models\soumission::with('appelOffre')->findOrFail($id);
+    $appel = $soumission->appelOffre;
 
-    // Appel vers Flask
-    $response = Http::post('http://127.0.0.1:5001/predict', [
-        'prixPropose' => $soumission->prixPropose,
-        'temps_realisation' => $soumission->temps_realisation,
-        'description' => $soumission->description,
-    ]);
+    // Texte de référence = titre + description de l'appel
+    $refText = trim(($appel->titre ?? '') . ' ' . ($appel->description ?? ''));
 
-    if ($response->successful()) {
-        $score = $response->json()['score_ia'];
-        $soumission->score_ia = $score;
+    // Budget (float) et délai attendu (jours) à partir des dates de l'appel
+    $budget = $appel?->budget ? (float) $appel->budget : null;
+
+    // Si tes dates sont castées en Carbon, c'est déjà OK. Sinon, parse avec Carbon::parse(...)
+    $joursAttendus = null;
+    if (!empty($appel?->date_debut) && !empty($appel?->date_fin)) {
+        try {
+            $debut = $appel->date_debut instanceof Carbon ? $appel->date_debut : Carbon::parse($appel->date_debut);
+            $fin   = $appel->date_fin   instanceof Carbon ? $appel->date_fin   : Carbon::parse($appel->date_fin);
+            // +1 si tu veux inclure les deux extrémités
+            $joursAttendus = max(1, $debut->diffInDays($fin));
+        } catch (\Throwable $e) {
+            $joursAttendus = null; // neutralisé côté Flask (50/100)
+        }
+    }
+
+    // Corps envoyé au service Flask v2
+    $payload = [
+        'prixPropose'       => (float) $soumission->prixPropose,
+        'temps_realisation' => (float) $soumission->temps_realisation,
+        'description'       => (string) ($soumission->description ?? ''),
+        'ref_text'          => $refText,          // <<< important
+        'budget'            => $budget,           // <<< important (peut être null)
+        'jours_attendus'    => $joursAttendus,    // <<< important (peut être null)
+    ];
+
+    // URL configurable (mettre SCORING_URL=http://127.0.0.1:5001/predict dans .env)
+    $url = config('services.scoring.url', env('SCORING_URL', 'http://127.0.0.1:5001/predict'));
+
+    try {
+        $response = Http::timeout(4)->retry(2, 150)->post($url, $payload);
+
+        if (!$response->successful()) {
+            return response()->json([
+                'message' => 'Erreur lors du scoring',
+                'details' => $response->body(),
+            ], $response->status());
+        }
+
+        $json = $response->json();
+
+        // Score final
+        $soumission->score_ia = isset($json['score_ia']) ? (float) $json['score_ia'] : null;
+
+        // Optionnel : si tu as ajouté des colonnes pour le détail, on les remplit
+        // (décommente si tu as ces colonnes en DB)
+        // $soumission->score_ia_text   = $json['breakdown']['similarite'] ?? null;
+        // $soumission->score_ia_price  = $json['breakdown']['prix'] ?? null;
+        // $soumission->score_ia_delay  = $json['breakdown']['delai'] ?? null;
+        // $soumission->score_ia_version = $json['model_version'] ?? null;
+
         $soumission->save();
 
         return response()->json([
-            'message' => '✅ Scoring effectué avec succès.',
-            'score_ia' => $score
+            'message'   => '✅ Scoring effectué avec succès.',
+            'payload'   => $payload,     // utile pour debug/traçabilité
+            'result'    => $json,        // contient score_ia (+ breakdown si activé côté Flask)
         ]);
-    } else {
-        return response()->json(['message' => 'Erreur lors du scoring'], 500);
+    } catch (ConnectionException $e) {
+        return response()->json([
+            'message' => 'Le service de scoring est injoignable.',
+            'error'   => $e->getMessage(),
+        ], 503);
+    } catch (\Throwable $e) {
+        return response()->json([
+            'message' => 'Erreur inattendue lors du scoring.',
+            'error'   => $e->getMessage(),
+        ], 500);
     }
 }
-
 
 public function getGlobalActivityIndex()
 {
